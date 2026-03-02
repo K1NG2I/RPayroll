@@ -85,6 +85,8 @@ public static class InMemoryDataStore
             Department = "Operations",
             Position = "Manager",
             BasicSalary = 80000,
+            DateOfJoining = DateTime.UtcNow.Date.AddMonths(-6),
+            Address = "100 Market Street",
             CreatedDate = DateTime.UtcNow,
             Status = StatusCode.Accepted
         };
@@ -112,6 +114,8 @@ public static class InMemoryDataStore
             Department = "Operations",
             Position = "Associate",
             BasicSalary = 45000,
+            DateOfJoining = DateTime.UtcNow.Date.AddMonths(-2),
+            Address = "200 Center Road",
             ManagerId = managerEmployee.Id,
             Manager = managerEmployee,
             CreatedDate = DateTime.UtcNow,
@@ -126,6 +130,8 @@ public static class InMemoryDataStore
             Department = "Operations",
             Position = "Associate",
             BasicSalary = 46000,
+            DateOfJoining = DateTime.UtcNow.Date.AddMonths(-1),
+            Address = "300 Riverside Ave",
             ManagerId = managerEmployee.Id,
             Manager = managerEmployee,
             CreatedDate = DateTime.UtcNow,

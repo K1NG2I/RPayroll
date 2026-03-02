@@ -1,11 +1,31 @@
 @{
-    ViewData["Title"] = "Employee Details";
-    var employeeId = (int)(ViewData["EmployeeId"] ?? 0);
+    ViewData["Title"] = "My Profile";
 }
 
-<h2>Employee Details</h2>
+<h2>My Profile</h2>
 
-<div id="employeeInfo" class="mb-4"></div>
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" id="profileEmail" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" id="profilePhone" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Address</label>
+                    <input class="form-control" id="profileAddress" />
+                </div>
+                <button class="btn btn-primary" id="saveProfileBtn">Save</button>
+                <div class="mt-2" id="profileResult"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="card shadow-sm">
     <div class="card-body">
@@ -85,38 +105,30 @@
 
 @section Scripts {
 <script>
-const employeeId = @employeeId;
+let employeeId = null;
 let contactModal;
 let contactDeleteModal;
 let deleteContactId = null;
 
-async function loadEmployee() {
-    const response = await fetch(`/Employee/GetById/${employeeId}`);
+async function loadProfile() {
+    const response = await fetch('/Employee/GetMyProfile');
     const data = response.ok ? await response.json() : null;
-    const container = document.getElementById('employeeInfo');
-    if (!data) {
-        container.innerHTML = '<div class="alert alert-danger">Employee not found</div>';
-        return;
-    }
+    if (!data) return;
 
-    container.innerHTML = `
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5>${data.firstName} ${data.lastName}</h5>
-                <p>Email: ${data.email ?? ''}</p>
-                <p>Phone: ${data.phone ?? ''}</p>
-                <p>Department: ${data.department ?? ''}</p>
-                <p>Position: ${data.position ?? ''}</p>
-                <p>Basic Salary: ${data.basicSalary}</p>
-            </div>
-        </div>
-    `;
+    employeeId = data.id;
+    document.getElementById('profileEmail').value = data.email ?? '';
+    document.getElementById('profilePhone').value = data.phone ?? '';
+    document.getElementById('profileAddress').value = data.address ?? '';
 
+    renderContacts(data.contactPersons || []);
+}
+
+function renderContacts(contacts) {
     const tbody = document.querySelector('#contactTable tbody');
     tbody.innerHTML = '';
-    (data.contactPersons || []).forEach(c => {
-        const row = document.createElement('tr');
+    contacts.forEach(c => {
         const primaryBadge = c.isPrimary ? '<span class="badge bg-success badge-status">Yes</span>' : '';
+        const row = document.createElement('tr');
         row.innerHTML = `
             <td>${c.name}</td>
             <td>${c.relationship ?? ''}</td>
@@ -133,9 +145,10 @@ async function loadEmployee() {
 }
 
 window.editContact = async function(contactId) {
-    const response = await fetch(`/Employee/GetById/${employeeId}`);
+    const response = await fetch('/Employee/GetMyProfile');
     const data = response.ok ? await response.json() : null;
     if (!data) return;
+
     const contact = (data.contactPersons || []).find(c => c.id === contactId);
     if (!contact) return;
 
@@ -191,7 +204,7 @@ document.getElementById('saveContactBtn').addEventListener('click', async () => 
 
     if (response.ok) {
         contactModal.hide();
-        await loadEmployee();
+        await loadProfile();
     }
 });
 
@@ -200,14 +213,36 @@ document.getElementById('confirmContactDelete').addEventListener('click', async 
     const response = await fetch(`/Employee/RemoveContact?id=${employeeId}&contactId=${deleteContactId}`, { method: 'DELETE' });
     if (response.ok) {
         contactDeleteModal.hide();
-        await loadEmployee();
+        await loadProfile();
+    }
+});
+
+document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+    const payload = {
+        email: document.getElementById('profileEmail').value,
+        phone: document.getElementById('profilePhone').value,
+        address: document.getElementById('profileAddress').value
+    };
+
+    const response = await fetch('/Employee/UpdateMyProfile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const resultEl = document.getElementById('profileResult');
+    if (response.ok) {
+        resultEl.innerHTML = '<div class="alert alert-success">Profile updated</div>';
+        await loadProfile();
+    } else {
+        resultEl.innerHTML = '<div class="alert alert-danger">Update failed</div>';
     }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
     contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
     contactDeleteModal = new bootstrap.Modal(document.getElementById('contactDeleteModal'));
-    loadEmployee();
+    loadProfile();
 });
 </script>
 }

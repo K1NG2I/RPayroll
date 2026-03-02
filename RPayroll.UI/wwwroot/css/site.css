@@ -6,12 +6,29 @@ body {
   background-color: #f5f7fb;
 }
 
+.app-header {
+  position: fixed;
+  top: -70px;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  transition: top 0.3s ease;
+}
+
+.app-header.header-visible {
+  top: 0;
+}
+
 .card {
   border-radius: 0.75rem;
 }
 
 .table {
   margin-bottom: 0;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f1f3f5;
 }
 
 .navbar .badge {
@@ -26,4 +43,8 @@ body {
 .list-group-item:focus,
 .list-group-item:hover {
   background-color: #e9ecef;
+}
+
+.badge-status {
+  font-size: 0.8rem;
 }

@@ -48,4 +48,18 @@ public class AuthService : IAuthService
             Role = user.Role?.Name ?? string.Empty
         };
     }
+
+    public async Task LogoutAsync(int userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, includeInactive: true);
+        if (user == null)
+        {
+            return;
+        }
+
+        user.Token = null;
+        user.UpdatedDate = DateTime.UtcNow;
+        await _unitOfWork.Users.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+    }
 }

@@ -25,22 +25,51 @@ public class PayrollService : IPayrollService
             throw new UnauthorizedAccessException("Not allowed to generate payroll.");
         }
 
-        var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId);
+        var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId, includeInactive: true);
         if (employee == null)
         {
             throw new InvalidOperationException("Employee not found.");
         }
 
-        var gross = employee.BasicSalary + (employee.BasicSalary * 0.2m);
-        var net = gross - (employee.BasicSalary * 0.1m);
+        var monthStart = new DateTime(periodStart.Year, periodStart.Month, 1);
+        var totalDaysInMonth = DateTime.DaysInMonth(periodStart.Year, periodStart.Month);
+        var monthEnd = monthStart.AddDays(totalDaysInMonth - 1);
+
+        var joiningDate = employee.DateOfJoining?.Date;
+        if (joiningDate.HasValue && joiningDate.Value > monthEnd)
+        {
+            return await CreateZeroPayrollAsync(employeeId, periodStart, periodEnd);
+        }
+
+        var workingDays = totalDaysInMonth;
+        if (joiningDate.HasValue && joiningDate.Value > monthStart)
+        {
+            var daysBeforeJoining = (joiningDate.Value - monthStart).Days;
+            workingDays -= daysBeforeJoining;
+        }
+
+        var approvedLeaves = await _unitOfWork.Leaves.GetByEmployeeAsync(employeeId, includeInactive: false);
+        var approvedLeaveDays = approvedLeaves
+            .Where(l => l.Status == StatusCode.Accepted)
+            .Sum(l => CalculateOverlapDays(l.StartDate.Date, l.EndDate.Date, monthStart, monthEnd));
+
+        workingDays -= approvedLeaveDays;
+        if (workingDays < 0)
+        {
+            workingDays = 0;
+        }
+
+        var grossSalary = employee.BasicSalary;
+        var dailyRate = totalDaysInMonth == 0 ? 0 : grossSalary / totalDaysInMonth;
+        var netSalary = dailyRate * workingDays;
 
         var payroll = new Payroll
         {
             EmployeeId = employeeId,
             PeriodStart = periodStart,
             PeriodEnd = periodEnd,
-            GrossSalary = gross,
-            NetSalary = net,
+            GrossSalary = grossSalary,
+            NetSalary = netSalary,
             GeneratedDate = DateTime.UtcNow,
             CreatedDate = DateTime.UtcNow,
             Status = StatusCode.Accepted
@@ -60,14 +89,14 @@ public class PayrollService : IPayrollService
             throw new UnauthorizedAccessException("Not allowed to view payrolls.");
         }
 
-        var payrolls = await _unitOfWork.Payrolls.GetByEmployeeAsync(employeeId, includeInactive: true);
+        var payrolls = await _unitOfWork.Payrolls.GetByEmployeeAsync(employeeId, includeInactive: false);
         return payrolls.Select(MapPayroll).ToList();
     }
 
     public async Task<IEnumerable<PayrollDto>> GetPayrollsForCurrentUserAsync()
     {
         EnsureAuthenticated();
-        var payrolls = await _unitOfWork.Payrolls.GetAllAsync(includeInactive: true);
+        var payrolls = await _unitOfWork.Payrolls.GetAllAsync(includeInactive: false);
         var filtered = await ApplyVisibilityFilterAsync(payrolls);
         return filtered.Select(MapPayroll).ToList();
     }
@@ -136,6 +165,38 @@ public class PayrollService : IPayrollService
         }
 
         return false;
+    }
+
+    private static int CalculateOverlapDays(DateTime start, DateTime end, DateTime rangeStart, DateTime rangeEnd)
+    {
+        if (end < rangeStart || start > rangeEnd)
+        {
+            return 0;
+        }
+
+        var effectiveStart = start < rangeStart ? rangeStart : start;
+        var effectiveEnd = end > rangeEnd ? rangeEnd : end;
+        return (effectiveEnd - effectiveStart).Days + 1;
+    }
+
+    private async Task<PayrollDto> CreateZeroPayrollAsync(int employeeId, DateTime periodStart, DateTime periodEnd)
+    {
+        var payroll = new Payroll
+        {
+            EmployeeId = employeeId,
+            PeriodStart = periodStart,
+            PeriodEnd = periodEnd,
+            GrossSalary = 0,
+            NetSalary = 0,
+            GeneratedDate = DateTime.UtcNow,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+
+        await _unitOfWork.Payrolls.AddAsync(payroll);
+        await _unitOfWork.SaveChangesAsync();
+
+        return MapPayroll(payroll);
     }
 
     private bool IsAdmin() => string.Equals(_currentUser.Role, "Admin", StringComparison.OrdinalIgnoreCase);

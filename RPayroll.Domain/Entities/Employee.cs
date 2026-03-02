@@ -12,6 +12,8 @@ public class Employee : BaseEntity
     public string? Department { get; set; }
     public string? Position { get; set; }
     public decimal BasicSalary { get; set; }
+    public DateTime? DateOfJoining { get; set; }
+    public string? Address { get; set; }
 
     public int? ManagerId { get; set; }
     public Employee? Manager { get; set; }

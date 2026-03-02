@@ -97,4 +97,26 @@ public class EmployeeController : ControllerBase
         var results = await _employeeService.SearchEmployeesAsync(query ?? string.Empty);
         return Ok(results);
     }
+
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var profile = await _employeeService.GetMyProfileAsync();
+        if (profile == null)
+        {
+            return NotFound();
+        }
+        return Ok(profile);
+    }
+
+    [HttpPut("me")]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateEmployeeProfileDto dto)
+    {
+        var profile = await _employeeService.UpdateMyProfileAsync(dto);
+        if (profile == null)
+        {
+            return NotFound();
+        }
+        return Ok(profile);
+    }
 }

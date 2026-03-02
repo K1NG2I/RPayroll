@@ -6,13 +6,14 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <table class="table table-striped" id="payrollTable">
+        <table class="table table-hover" id="payrollTable">
             <thead>
                 <tr>
                     <th>Id</th>
                     <th>Employee</th>
                     <th>Period</th>
                     <th>Net Salary</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -42,6 +43,8 @@
 let payrollDeleteId = null;
 let payrollDeleteModal;
 
+const statusBadge = () => '<span class="badge bg-success badge-status">Active</span>';
+
 async function loadPayrolls() {
     const response = await fetch('/Payroll/GetAll');
     const data = response.ok ? await response.json() : [];
@@ -54,8 +57,9 @@ async function loadPayrolls() {
             <td>${payroll.employeeId}</td>
             <td>${payroll.periodStart} - ${payroll.periodEnd}</td>
             <td>${payroll.netSalary}</td>
+            <td>${statusBadge()}</td>
             <td>
-                <button class="btn btn-sm btn-outline-danger" onclick="openPayrollDelete(${payroll.id})">Delete</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="openPayrollDelete(${payroll.id})"><i class="fa fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(row);

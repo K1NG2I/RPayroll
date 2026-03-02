@@ -12,4 +12,6 @@ public class UpdateEmployeeDto
     public string? Position { get; set; }
     public decimal BasicSalary { get; set; }
     public int? ManagerId { get; set; }
+    public DateTime? DateOfJoining { get; set; }
+    public string? Address { get; set; }
 }

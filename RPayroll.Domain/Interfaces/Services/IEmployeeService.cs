@@ -14,4 +14,6 @@ public interface IEmployeeService
     Task<EmployeeContactPersonDto?> UpdateContactPersonAsync(int employeeId, EmployeeContactPersonDto dto);
     Task<bool> RemoveContactPersonAsync(int employeeId, int contactPersonId);
     Task<IEnumerable<EmployeeSearchResultDto>> SearchEmployeesAsync(string query);
+    Task<EmployeeDto?> GetMyProfileAsync();
+    Task<EmployeeDto?> UpdateMyProfileAsync(UpdateEmployeeProfileDto dto);
 }

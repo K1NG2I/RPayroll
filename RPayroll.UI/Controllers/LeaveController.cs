@@ -25,6 +25,12 @@ public class LeaveController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult MyLeaves()
+    {
+        return View();
+    }
+
     [HttpPost]
     public async Task<IActionResult> Apply([FromBody] LeaveRequestDto dto)
     {
@@ -69,6 +75,13 @@ public class LeaveController : Controller
     public async Task<IActionResult> GetAll()
     {
         var leaves = await _apiClient.GetAsync<List<LeaveRequestDto>>("/api/leave");
+        return Ok(leaves ?? new List<LeaveRequestDto>());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMy()
+    {
+        var leaves = await _apiClient.GetAsync<List<LeaveRequestDto>>("/api/leave/my");
         return Ok(leaves ?? new List<LeaveRequestDto>());
     }
 

@@ -6,7 +6,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <table class="table table-striped" id="employeeTable">
+        <table class="table table-hover" id="employeeTable">
             <thead>
                 <tr>
                     <th>Id</th>
@@ -62,6 +62,14 @@
                 <div class="mb-2">
                     <label class="form-label">Phone</label>
                     <input class="form-control" id="editPhone" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Address</label>
+                    <input class="form-control" id="editAddress" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Date Of Joining</label>
+                    <input class="form-control" id="editDateOfJoining" type="date" />
                 </div>
                 <div class="mb-2">
                     <label class="form-label">Department</label>
@@ -122,8 +130,8 @@ async function loadEmployees() {
             <td>${emp.managerId ?? ''}</td>
             <td>
                 <a class="btn btn-sm btn-outline-primary" href="/Employee/Details/${emp.id}">Details</a>
-                <button class="btn btn-sm btn-outline-secondary ms-1" onclick="openEdit(${emp.id})">Edit</button>
-                <button class="btn btn-sm btn-outline-danger ms-1" onclick="openDelete(${emp.id})">Delete</button>
+                <button class="btn btn-sm btn-outline-secondary ms-1" onclick="openEdit(${emp.id})"><i class="fa fa-pen"></i></button>
+                <button class="btn btn-sm btn-outline-danger ms-1" onclick="openDelete(${emp.id})"><i class="fa fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(row);
@@ -145,6 +153,8 @@ window.openEdit = async function(id) {
     document.getElementById('editLastName').value = emp.lastName;
     document.getElementById('editEmail').value = emp.email ?? '';
     document.getElementById('editPhone').value = emp.phone ?? '';
+    document.getElementById('editAddress').value = emp.address ?? '';
+    document.getElementById('editDateOfJoining').value = emp.dateOfJoining ? emp.dateOfJoining.split('T')[0] : '';
     document.getElementById('editDepartment').value = emp.department ?? '';
     document.getElementById('editPosition').value = emp.position ?? '';
     document.getElementById('editSalary').value = emp.basicSalary;
@@ -175,6 +185,8 @@ document.getElementById('saveEditBtn').addEventListener('click', async () => {
         lastName: document.getElementById('editLastName').value,
         email: document.getElementById('editEmail').value,
         phone: document.getElementById('editPhone').value,
+        address: document.getElementById('editAddress').value,
+        dateOfJoining: document.getElementById('editDateOfJoining').value,
         department: document.getElementById('editDepartment').value,
         position: document.getElementById('editPosition').value,
         basicSalary: parseFloat(document.getElementById('editSalary').value || '0'),

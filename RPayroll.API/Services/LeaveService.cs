@@ -68,6 +68,7 @@ public class LeaveService : ILeaveService
 
         leave.Status = StatusCode.Accepted;
         leave.ApprovedByUserId = _currentUser.UserId;
+        leave.ApprovedByUser = await _unitOfWork.Users.GetByIdAsync(_currentUser.UserId, includeInactive: true);
         leave.ApprovedDate = DateTime.UtcNow;
         leave.UpdatedDate = DateTime.UtcNow;
         await _unitOfWork.Leaves.UpdateAsync(leave);
@@ -89,6 +90,7 @@ public class LeaveService : ILeaveService
 
         leave.Status = StatusCode.Rejected;
         leave.ApprovedByUserId = _currentUser.UserId;
+        leave.ApprovedByUser = await _unitOfWork.Users.GetByIdAsync(_currentUser.UserId, includeInactive: true);
         leave.ApprovedDate = DateTime.UtcNow;
         leave.UpdatedDate = DateTime.UtcNow;
         await _unitOfWork.Leaves.UpdateAsync(leave);
@@ -115,6 +117,18 @@ public class LeaveService : ILeaveService
         var leaves = await _unitOfWork.Leaves.GetAllAsync(includeInactive: true);
         var filtered = await ApplyLeaveVisibilityAsync(leaves);
         return filtered.Select(MapLeave).ToList();
+    }
+
+    public async Task<IEnumerable<LeaveRequestDto>> GetMyLeavesAsync()
+    {
+        EnsureAuthenticated();
+        if (!_currentUser.EmployeeId.HasValue)
+        {
+            return Enumerable.Empty<LeaveRequestDto>();
+        }
+
+        var leaves = await _unitOfWork.Leaves.GetByEmployeeAsync(_currentUser.EmployeeId.Value, includeInactive: true);
+        return leaves.Select(MapLeave).ToList();
     }
 
     public async Task<bool> SoftDeleteLeaveAsync(int leaveId)
@@ -247,7 +261,8 @@ public class LeaveService : ILeaveService
             Reason = leave.Reason,
             Status = leave.Status,
             ApprovedByUserId = leave.ApprovedByUserId,
-            ApprovedDate = leave.ApprovedDate
+            ApprovedDate = leave.ApprovedDate,
+            ApprovedByName = leave.ApprovedByUser?.Username
         };
     }
 }

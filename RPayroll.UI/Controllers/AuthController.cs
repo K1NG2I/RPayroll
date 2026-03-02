@@ -33,4 +33,12 @@ public class AuthController : Controller
         _tokenStore.SetToken(response.Token, response.UserId, response.Username, response.Role);
         return Ok(response);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Logout()
+    {
+        await _apiClient.PostAsync<object, object>("/api/auth/logout", new { });
+        _tokenStore.Clear();
+        return RedirectToAction("Login");
+    }
 }

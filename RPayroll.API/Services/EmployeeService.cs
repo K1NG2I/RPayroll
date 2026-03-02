@@ -36,6 +36,8 @@ public class EmployeeService : IEmployeeService
                 Position = dto.Position,
                 BasicSalary = dto.BasicSalary,
                 ManagerId = dto.ManagerId,
+                DateOfJoining = dto.DateOfJoining,
+                Address = dto.Address,
                 CreatedDate = DateTime.UtcNow,
                 Status = StatusCode.Accepted
             };
@@ -44,16 +46,19 @@ public class EmployeeService : IEmployeeService
             {
                 foreach (var contact in dto.ContactPersons)
                 {
-                    employee.ContactPersons.Add(new EmployeeContactPerson
+                    var contactEntity = new EmployeeContactPerson
                     {
                         Name = contact.Name,
                         Relationship = contact.Relationship,
                         Phone = contact.Phone,
                         Email = contact.Email,
+                        IsPrimary = contact.IsPrimary,
                         CreatedDate = DateTime.UtcNow,
                         Status = StatusCode.Accepted
-                    });
+                    };
+                    employee.ContactPersons.Add(contactEntity);
                 }
+                EnforceSinglePrimary(employee);
             }
 
             await _unitOfWork.Employees.AddAsync(employee);
@@ -144,6 +149,8 @@ public class EmployeeService : IEmployeeService
         employee.Position = dto.Position;
         employee.BasicSalary = dto.BasicSalary;
         employee.ManagerId = dto.ManagerId;
+        employee.DateOfJoining = dto.DateOfJoining;
+        employee.Address = dto.Address;
         employee.UpdatedDate = DateTime.UtcNow;
         employee.Status = employee.Status == StatusCode.Rejected ? StatusCode.Accepted : employee.Status;
 
@@ -192,23 +199,21 @@ public class EmployeeService : IEmployeeService
             Relationship = dto.Relationship,
             Phone = dto.Phone,
             Email = dto.Email,
+            IsPrimary = dto.IsPrimary,
             CreatedDate = DateTime.UtcNow,
             Status = StatusCode.Accepted
         };
 
         employee.ContactPersons.Add(contact);
+        if (dto.IsPrimary)
+        {
+            EnsureSinglePrimary(employee, contact.Id);
+        }
+
         await _unitOfWork.Employees.UpdateAsync(employee);
         await _unitOfWork.SaveChangesAsync();
 
-        return new EmployeeContactPersonDto
-        {
-            Id = contact.Id,
-            EmployeeId = employeeId,
-            Name = contact.Name,
-            Relationship = contact.Relationship,
-            Phone = contact.Phone,
-            Email = contact.Email
-        };
+        return MapContact(employeeId, contact);
     }
 
     public async Task<EmployeeContactPersonDto?> UpdateContactPersonAsync(int employeeId, EmployeeContactPersonDto dto)
@@ -232,20 +237,18 @@ public class EmployeeService : IEmployeeService
         contact.Relationship = dto.Relationship;
         contact.Phone = dto.Phone;
         contact.Email = dto.Email;
+        contact.IsPrimary = dto.IsPrimary;
         contact.UpdatedDate = DateTime.UtcNow;
+
+        if (dto.IsPrimary)
+        {
+            EnsureSinglePrimary(employee, contact.Id);
+        }
 
         await _unitOfWork.Employees.UpdateAsync(employee);
         await _unitOfWork.SaveChangesAsync();
 
-        return new EmployeeContactPersonDto
-        {
-            Id = contact.Id,
-            EmployeeId = employeeId,
-            Name = contact.Name,
-            Relationship = contact.Relationship,
-            Phone = contact.Phone,
-            Email = contact.Email
-        };
+        return MapContact(employeeId, contact);
     }
 
     public async Task<bool> RemoveContactPersonAsync(int employeeId, int contactPersonId)
@@ -266,6 +269,7 @@ public class EmployeeService : IEmployeeService
         }
 
         contact.Status = StatusCode.Rejected;
+        contact.IsPrimary = false;
         contact.UpdatedDate = DateTime.UtcNow;
         await _unitOfWork.Employees.UpdateAsync(employee);
         await _unitOfWork.SaveChangesAsync();
@@ -284,6 +288,48 @@ public class EmployeeService : IEmployeeService
             Id = e.Id,
             FullName = $"{e.FirstName} {e.LastName}".Trim()
         }).ToList();
+    }
+
+    public async Task<EmployeeDto?> GetMyProfileAsync()
+    {
+        EnsureAuthenticated();
+        if (!_currentUser.EmployeeId.HasValue)
+        {
+            return null;
+        }
+
+        var employee = await _unitOfWork.Employees.GetByIdAsync(_currentUser.EmployeeId.Value, includeInactive: true);
+        return employee == null ? null : MapEmployee(employee);
+    }
+
+    public async Task<EmployeeDto?> UpdateMyProfileAsync(UpdateEmployeeProfileDto dto)
+    {
+        EnsureAuthenticated();
+        if (!_currentUser.EmployeeId.HasValue)
+        {
+            throw new UnauthorizedAccessException("Only employees can update profile.");
+        }
+
+        var employee = await _unitOfWork.Employees.GetByIdAsync(_currentUser.EmployeeId.Value, includeInactive: true);
+        if (employee == null)
+        {
+            return null;
+        }
+
+        if (employee.Id != _currentUser.EmployeeId.Value)
+        {
+            throw new UnauthorizedAccessException("Cannot edit other employee profile.");
+        }
+
+        employee.Email = dto.Email;
+        employee.Phone = dto.Phone;
+        employee.Address = dto.Address;
+        employee.UpdatedDate = DateTime.UtcNow;
+
+        await _unitOfWork.Employees.UpdateAsync(employee);
+        await _unitOfWork.SaveChangesAsync();
+
+        return MapEmployee(employee);
     }
 
     private IEnumerable<Employee> ApplyVisibilityFilter(IEnumerable<Employee> employees)
@@ -391,6 +437,8 @@ public class EmployeeService : IEmployeeService
             Position = employee.Position,
             BasicSalary = employee.BasicSalary,
             ManagerId = employee.ManagerId,
+            DateOfJoining = employee.DateOfJoining,
+            Address = employee.Address,
             ContactPersons = employee.ContactPersons
                 .Where(c => c.Status != StatusCode.Rejected)
                 .Select(c => new EmployeeContactPersonDto
@@ -400,8 +448,51 @@ public class EmployeeService : IEmployeeService
                     Name = c.Name,
                     Relationship = c.Relationship,
                     Phone = c.Phone,
-                    Email = c.Email
+                    Email = c.Email,
+                    IsPrimary = c.IsPrimary
                 }).ToList()
         };
+    }
+
+    private static EmployeeContactPersonDto MapContact(int employeeId, EmployeeContactPerson contact)
+    {
+        return new EmployeeContactPersonDto
+        {
+            Id = contact.Id,
+            EmployeeId = employeeId,
+            Name = contact.Name,
+            Relationship = contact.Relationship,
+            Phone = contact.Phone,
+            Email = contact.Email,
+            IsPrimary = contact.IsPrimary
+        };
+    }
+
+    private static void EnforceSinglePrimary(Employee employee)
+    {
+        var primary = employee.ContactPersons.FirstOrDefault(c => c.IsPrimary);
+        if (primary == null)
+        {
+            return;
+        }
+
+        foreach (var contact in employee.ContactPersons)
+        {
+            if (contact != primary)
+            {
+                contact.IsPrimary = false;
+            }
+        }
+    }
+
+    private static void EnsureSinglePrimary(Employee employee, int primaryContactId)
+    {
+        foreach (var contact in employee.ContactPersons)
+        {
+            if (contact.Id != primaryContactId)
+            {
+                contact.IsPrimary = false;
+            }
+        }
     }
 }

@@ -33,6 +33,12 @@ public class EmployeeController : Controller
     }
 
     [HttpGet]
+    public IActionResult MyProfile()
+    {
+        return View();
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var employees = await _apiClient.GetAsync<List<EmployeeDto>>("/api/employees");
@@ -43,6 +49,17 @@ public class EmployeeController : Controller
     public async Task<IActionResult> GetById(int id)
     {
         var employee = await _apiClient.GetAsync<EmployeeDto>($"/api/employees/{id}");
+        if (employee == null)
+        {
+            return NotFound();
+        }
+        return Ok(employee);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var employee = await _apiClient.GetAsync<EmployeeDto>("/api/employees/me");
         if (employee == null)
         {
             return NotFound();
@@ -65,6 +82,17 @@ public class EmployeeController : Controller
     public async Task<IActionResult> Update(int id, [FromBody] UpdateEmployeeDto dto)
     {
         var employee = await _apiClient.PutAsync<UpdateEmployeeDto, EmployeeDto>($"/api/employees/{id}", dto);
+        if (employee == null)
+        {
+            return BadRequest();
+        }
+        return Ok(employee);
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateEmployeeProfileDto dto)
+    {
+        var employee = await _apiClient.PutAsync<UpdateEmployeeProfileDto, EmployeeDto>("/api/employees/me", dto);
         if (employee == null)
         {
             return BadRequest();

@@ -25,6 +25,14 @@
                     <input class="form-control" id="phone" />
                 </div>
                 <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <input class="form-control" id="address" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date Of Joining</label>
+                    <input class="form-control" id="dateOfJoining" type="date" />
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Department</label>
                     <input class="form-control" id="department" />
                 </div>
@@ -58,6 +66,10 @@
                 <div class="mb-3">
                     <label class="form-label">Email</label>
                     <input class="form-control" id="contactEmail" />
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="contactPrimary" />
+                    <label class="form-check-label">Is Primary</label>
                 </div>
 
                 <div class="form-check mb-3">
@@ -106,7 +118,8 @@ document.getElementById('createBtn').addEventListener('click', async () => {
             name: contactName,
             relationship: document.getElementById('contactRelationship').value,
             phone: document.getElementById('contactPhone').value,
-            email: document.getElementById('contactEmail').value
+            email: document.getElementById('contactEmail').value,
+            isPrimary: document.getElementById('contactPrimary').checked
         });
     }
 
@@ -115,6 +128,8 @@ document.getElementById('createBtn').addEventListener('click', async () => {
         lastName: document.getElementById('lastName').value,
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        dateOfJoining: document.getElementById('dateOfJoining').value,
         department: document.getElementById('department').value,
         position: document.getElementById('position').value,
         basicSalary: parseFloat(document.getElementById('basicSalary').value || '0'),

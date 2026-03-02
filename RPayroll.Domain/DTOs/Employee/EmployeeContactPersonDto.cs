@@ -8,4 +8,5 @@ public class EmployeeContactPersonDto
     public string? Relationship { get; set; }
     public string? Phone { get; set; }
     public string? Email { get; set; }
+    public bool IsPrimary { get; set; }
 }

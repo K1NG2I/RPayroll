@@ -1,0 +1,63 @@
+@{
+    ViewData["Title"] = "My Leaves";
+}
+
+<h2>My Leaves</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover" id="myLeaveTable">
+            <thead>
+                <tr>
+                    <th>From Date</th>
+                    <th>To Date</th>
+                    <th>Total Days</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Approved By</th>
+                    <th>Approved Date</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const badge = status => {
+    if (status === 0) return '<span class="badge bg-warning badge-status">Pending</span>';
+    if (status === 30) return '<span class="badge bg-success badge-status">Approved</span>';
+    return '<span class="badge bg-danger badge-status">Rejected</span>';
+};
+
+const daysBetween = (start, end) => {
+    const s = new Date(start);
+    const e = new Date(end);
+    const diff = Math.floor((e - s) / (1000 * 60 * 60 * 24));
+    return diff + 1;
+};
+
+async function loadMyLeaves() {
+    const response = await fetch('/Leave/GetMy');
+    const data = response.ok ? await response.json() : [];
+    const tbody = document.querySelector('#myLeaveTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(leave => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${leave.startDate}</td>
+            <td>${leave.endDate}</td>
+            <td>${daysBetween(leave.startDate, leave.endDate)}</td>
+            <td>${leave.reason ?? ''}</td>
+            <td>${badge(leave.status)}</td>
+            <td>${leave.approvedByName ?? ''}</td>
+            <td>${leave.approvedDate ?? ''}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+loadMyLeaves();
+</script>
+}

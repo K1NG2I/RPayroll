@@ -22,7 +22,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <table class="table table-striped" id="roleTable">
+        <table class="table table-hover" id="roleTable">
             <thead>
                 <tr>
                     <th>Id</th>
@@ -73,7 +73,9 @@ async function loadRoles() {
     const tbody = document.querySelector('#roleTable tbody');
     tbody.innerHTML = '';
     data.forEach(role => {
-        const status = role.status === 200 ? 'Inactive' : 'Active';
+        const status = role.status === 200
+            ? '<span class="badge bg-danger badge-status">Inactive</span>'
+            : '<span class="badge bg-success badge-status">Active</span>';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${role.id}</td>
@@ -81,8 +83,8 @@ async function loadRoles() {
             <td>${role.hierarchyLevel}</td>
             <td>${status}</td>
             <td>
-                <button class="btn btn-sm btn-outline-secondary" onclick="openRoleEdit(${role.id})">Edit</button>
-                <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteRole(${role.id})">Delete</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="openRoleEdit(${role.id})"><i class="fa fa-pen"></i></button>
+                <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteRole(${role.id})"><i class="fa fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(row);

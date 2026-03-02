@@ -12,5 +12,7 @@ public class EmployeeDto
     public string? Position { get; set; }
     public decimal BasicSalary { get; set; }
     public int? ManagerId { get; set; }
+    public DateTime? DateOfJoining { get; set; }
+    public string? Address { get; set; }
     public List<EmployeeContactPersonDto> ContactPersons { get; set; } = new();
 }

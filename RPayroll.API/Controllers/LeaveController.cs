@@ -64,6 +64,13 @@ public class LeaveController : ControllerBase
         return Ok(leaves);
     }
 
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyLeaves()
+    {
+        var leaves = await _leaveService.GetMyLeavesAsync();
+        return Ok(leaves);
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> SoftDelete(int id)
     {
