@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Employee Details";
+    var employeeId = (int)(ViewData["EmployeeId"] ?? 0);
+}
+
+<h2>Employee Details</h2>
+
+<div id="employeeInfo" class="mb-4"></div>
+
+<h5>Add Contact Person</h5>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-2">
+            <label class="form-label">Name</label>
+            <input class="form-control" id="contactName" />
+        </div>
+        <div class="mb-2">
+            <label class="form-label">Relationship</label>
+            <input class="form-control" id="contactRelationship" />
+        </div>
+        <div class="mb-2">
+            <label class="form-label">Phone</label>
+            <input class="form-control" id="contactPhone" />
+        </div>
+        <div class="mb-2">
+            <label class="form-label">Email</label>
+            <input class="form-control" id="contactEmail" />
+        </div>
+        <button class="btn btn-primary" id="addContactBtn">Add Contact</button>
+        <div class="mt-3" id="contactResult"></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const employeeId = @employeeId;
+
+async function loadEmployee() {
+    const response = await fetch(`/Employee/GetById/${employeeId}`);
+    const data = response.ok ? await response.json() : null;
+    const container = document.getElementById('employeeInfo');
+    if (!data) {
+        container.innerHTML = '<div class="alert alert-danger">Employee not found</div>';
+        return;
+    }
+
+    const contacts = (data.contactPersons || []).map(c => `<li>${c.name} (${c.relationship ?? ''})</li>`).join('');
+    container.innerHTML = `
+        <div class="card">
+            <div class="card-body">
+                <h5>${data.firstName} ${data.lastName}</h5>
+                <p>Email: ${data.email ?? ''}</p>
+                <p>Phone: ${data.phone ?? ''}</p>
+                <p>Department: ${data.department ?? ''}</p>
+                <p>Position: ${data.position ?? ''}</p>
+                <p>Basic Salary: ${data.basicSalary}</p>
+                <div>
+                    <strong>Contacts</strong>
+                    <ul>${contacts || '<li>No contacts</li>'}</ul>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+loadEmployee();
+
+document.getElementById('addContactBtn').addEventListener('click', async () => {
+    const payload = {
+        employeeId: employeeId,
+        name: document.getElementById('contactName').value,
+        relationship: document.getElementById('contactRelationship').value,
+        phone: document.getElementById('contactPhone').value,
+        email: document.getElementById('contactEmail').value
+    };
+
+    const response = await fetch(`/Employee/AddContact/${employeeId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const resultEl = document.getElementById('contactResult');
+    if (response.ok) {
+        resultEl.innerHTML = '<div class="alert alert-success">Contact added</div>';
+        await loadEmployee();
+    } else {
+        resultEl.innerHTML = '<div class="alert alert-danger">Add contact failed</div>';
+    }
+});
+</script>
+}

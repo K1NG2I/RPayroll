@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Apply Leave";
+}
+
+<h2>Apply Leave</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label">Employee Id</label>
+            <input class="form-control" id="employeeId" type="number" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Start Date</label>
+            <input class="form-control" id="startDate" type="date" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">End Date</label>
+            <input class="form-control" id="endDate" type="date" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Reason</label>
+            <input class="form-control" id="reason" />
+        </div>
+        <button class="btn btn-primary" id="applyBtn">Apply</button>
+        <div class="mt-3" id="applyResult"></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('applyBtn').addEventListener('click', async () => {
+    const payload = {
+        employeeId: parseInt(document.getElementById('employeeId').value || '0'),
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        reason: document.getElementById('reason').value
+    };
+
+    const response = await fetch('/Leave/Apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const resultEl = document.getElementById('applyResult');
+    if (response.ok) {
+        const data = await response.json();
+        resultEl.innerHTML = `<div class="alert alert-success">Leave applied (#${data.id})</div>`;
+    } else {
+        resultEl.innerHTML = '<div class="alert alert-danger">Leave apply failed</div>';
+    }
+});
+</script>
+}

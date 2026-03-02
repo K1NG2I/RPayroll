@@ -1,0 +1,43 @@
+using RPayroll.Infrastructure.Repositories.Interfaces;
+
+namespace RPayroll.Infrastructure.UnitOfWork;
+
+public class UnitOfWork : IUnitOfWork
+{
+    public UnitOfWork(
+        IEmployeeRepository employees,
+        IUserRepository users,
+        ILeaveRepository leaves,
+        IPayrollRepository payrolls)
+    {
+        Employees = employees;
+        Users = users;
+        Leaves = leaves;
+        Payrolls = payrolls;
+    }
+
+    public IEmployeeRepository Employees { get; }
+    public IUserRepository Users { get; }
+    public ILeaveRepository Leaves { get; }
+    public IPayrollRepository Payrolls { get; }
+
+    public Task SaveChangesAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task BeginTransactionAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task CommitAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task RollbackAsync()
+    {
+        return Task.CompletedTask;
+    }
+}

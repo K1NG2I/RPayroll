@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Generate Payroll";
+}
+
+<h2>Generate Payroll</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label">Employee Id</label>
+            <input class="form-control" id="employeeId" type="number" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Period Start</label>
+            <input class="form-control" id="periodStart" type="date" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Period End</label>
+            <input class="form-control" id="periodEnd" type="date" />
+        </div>
+        <button class="btn btn-primary" id="generateBtn">Generate</button>
+        <div class="mt-3" id="generateResult"></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('generateBtn').addEventListener('click', async () => {
+    const payload = {
+        employeeId: parseInt(document.getElementById('employeeId').value || '0'),
+        periodStart: document.getElementById('periodStart').value,
+        periodEnd: document.getElementById('periodEnd').value
+    };
+
+    const response = await fetch('/Payroll/Generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const resultEl = document.getElementById('generateResult');
+    if (response.ok) {
+        const data = await response.json();
+        resultEl.innerHTML = `<div class="alert alert-success">Payroll generated (#${data.id}) - Net ${data.netSalary}</div>`;
+    } else {
+        resultEl.innerHTML = '<div class="alert alert-danger">Payroll generation failed</div>';
+    }
+});
+</script>
+}

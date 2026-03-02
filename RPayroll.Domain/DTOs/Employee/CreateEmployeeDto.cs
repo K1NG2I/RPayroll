@@ -1,0 +1,20 @@
+namespace RPayroll.Domain.DTOs.Employee;
+
+public class CreateEmployeeDto
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public DateTime? DateOfBirth { get; set; }
+    public string? Department { get; set; }
+    public string? Position { get; set; }
+    public decimal BasicSalary { get; set; }
+
+    public bool CreateLogin { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; }
+    public string? RoleName { get; set; }
+
+    public List<EmployeeContactPersonDto> ContactPersons { get; set; } = new();
+}

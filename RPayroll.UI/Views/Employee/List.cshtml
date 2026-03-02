@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Employee List";
+}
+
+<h2>Employees</h2>
+
+<table class="table table-striped" id="employeeTable">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Position</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@section Scripts {
+<script>
+async function loadEmployees() {
+    const response = await fetch('/Employee/GetAll');
+    const data = response.ok ? await response.json() : [];
+    const tbody = document.querySelector('#employeeTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(emp => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${emp.id}</td>
+            <td>${emp.firstName} ${emp.lastName}</td>
+            <td>${emp.department ?? ''}</td>
+            <td>${emp.position ?? ''}</td>
+            <td><a class="btn btn-sm btn-outline-primary" href="/Employee/Details/${emp.id}">Details</a></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+loadEmployees();
+</script>
+}
