@@ -9,14 +9,19 @@ namespace RPayroll.API.Services;
 public class EmployeeService : IEmployeeService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserContext _currentUser;
 
-    public EmployeeService(IUnitOfWork unitOfWork)
+    public EmployeeService(IUnitOfWork unitOfWork, ICurrentUserContext currentUser)
     {
         _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
     }
 
     public async Task<EmployeeDto> CreateEmployeeAsync(CreateEmployeeDto dto)
     {
+        EnsureAuthenticated();
+        EnsureCanManageEmployees(dto.ManagerId);
+
         await _unitOfWork.BeginTransactionAsync();
         try
         {
@@ -30,6 +35,7 @@ public class EmployeeService : IEmployeeService
                 Department = dto.Department,
                 Position = dto.Position,
                 BasicSalary = dto.BasicSalary,
+                ManagerId = dto.ManagerId,
                 CreatedDate = DateTime.UtcNow,
                 Status = StatusCode.Accepted
             };
@@ -54,16 +60,22 @@ public class EmployeeService : IEmployeeService
 
             if (dto.CreateLogin && !string.IsNullOrWhiteSpace(dto.Username))
             {
+                var roleName = string.IsNullOrWhiteSpace(dto.RoleName) ? "Employee" : dto.RoleName;
+                var role = await _unitOfWork.Roles.GetByNameAsync(roleName, includeInactive: true)
+                           ?? new Role
+                           {
+                               Name = roleName,
+                               HierarchyLevel = 4,
+                               CreatedDate = DateTime.UtcNow,
+                               Status = StatusCode.Accepted
+                           };
+
                 var user = new User
                 {
                     Username = dto.Username,
                     Password = dto.Password ?? string.Empty,
-                    Role = new Role
-                    {
-                        Name = string.IsNullOrWhiteSpace(dto.RoleName) ? "Employee" : dto.RoleName,
-                        CreatedDate = DateTime.UtcNow,
-                        Status = StatusCode.Accepted
-                    },
+                    Role = role,
+                    RoleId = role.Id,
                     EmployeeId = employee.Id,
                     Employee = employee,
                     CreatedDate = DateTime.UtcNow,
@@ -91,23 +103,87 @@ public class EmployeeService : IEmployeeService
 
     public async Task<EmployeeDto?> GetEmployeeByIdAsync(int id)
     {
-        var employee = await _unitOfWork.Employees.GetByIdAsync(id);
-        return employee == null ? null : MapEmployee(employee);
+        EnsureAuthenticated();
+        var allowed = await GetEmployeesForCurrentUserAsync();
+        return allowed.FirstOrDefault(e => e.Id == id);
     }
 
     public async Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync()
     {
-        var employees = await _unitOfWork.Employees.GetAllAsync();
+        EnsureAuthenticated();
+        var employees = await _unitOfWork.Employees.GetAllAsync(includeInactive: true);
         return employees.Select(MapEmployee).ToList();
+    }
+
+    public async Task<IEnumerable<EmployeeDto>> GetEmployeesForCurrentUserAsync()
+    {
+        EnsureAuthenticated();
+        var employees = await _unitOfWork.Employees.GetAllAsync(includeInactive: false);
+        var filtered = ApplyVisibilityFilter(employees);
+        return filtered.Select(MapEmployee).ToList();
+    }
+
+    public async Task<EmployeeDto?> UpdateEmployeeAsync(UpdateEmployeeDto dto)
+    {
+        EnsureAuthenticated();
+
+        var employee = await _unitOfWork.Employees.GetByIdAsync(dto.Id, includeInactive: true);
+        if (employee == null)
+        {
+            return null;
+        }
+
+        EnsureCanModifyEmployee(employee);
+
+        employee.FirstName = dto.FirstName;
+        employee.LastName = dto.LastName;
+        employee.Email = dto.Email;
+        employee.Phone = dto.Phone;
+        employee.DateOfBirth = dto.DateOfBirth;
+        employee.Department = dto.Department;
+        employee.Position = dto.Position;
+        employee.BasicSalary = dto.BasicSalary;
+        employee.ManagerId = dto.ManagerId;
+        employee.UpdatedDate = DateTime.UtcNow;
+        employee.Status = employee.Status == StatusCode.Rejected ? StatusCode.Accepted : employee.Status;
+
+        await _unitOfWork.Employees.UpdateAsync(employee);
+        await _unitOfWork.SaveChangesAsync();
+
+        return MapEmployee(employee);
+    }
+
+    public async Task<bool> SoftDeleteEmployeeAsync(int id)
+    {
+        EnsureAuthenticated();
+        var employee = await _unitOfWork.Employees.GetByIdAsync(id, includeInactive: true);
+        if (employee == null)
+        {
+            return false;
+        }
+
+        if (!IsAdminOrHr() && !IsManagerOf(employee))
+        {
+            throw new UnauthorizedAccessException("Not allowed to delete employee.");
+        }
+
+        employee.Status = StatusCode.Rejected;
+        employee.UpdatedDate = DateTime.UtcNow;
+        await _unitOfWork.Employees.UpdateAsync(employee);
+        await _unitOfWork.SaveChangesAsync();
+        return true;
     }
 
     public async Task<EmployeeContactPersonDto> AddContactPersonAsync(int employeeId, EmployeeContactPersonDto dto)
     {
-        var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId);
+        EnsureAuthenticated();
+        var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId, includeInactive: true);
         if (employee == null)
         {
             throw new InvalidOperationException("Employee not found.");
         }
+
+        EnsureCanModifyEmployee(employee);
 
         var contact = new EmployeeContactPerson
         {
@@ -124,7 +200,7 @@ public class EmployeeService : IEmployeeService
         await _unitOfWork.Employees.UpdateAsync(employee);
         await _unitOfWork.SaveChangesAsync();
 
-        var mapped = new EmployeeContactPersonDto
+        return new EmployeeContactPersonDto
         {
             Id = contact.Id,
             EmployeeId = employeeId,
@@ -133,8 +209,172 @@ public class EmployeeService : IEmployeeService
             Phone = contact.Phone,
             Email = contact.Email
         };
+    }
 
-        return mapped;
+    public async Task<EmployeeContactPersonDto?> UpdateContactPersonAsync(int employeeId, EmployeeContactPersonDto dto)
+    {
+        EnsureAuthenticated();
+        var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId, includeInactive: true);
+        if (employee == null)
+        {
+            return null;
+        }
+
+        EnsureCanModifyEmployee(employee);
+
+        var contact = employee.ContactPersons.FirstOrDefault(c => c.Id == dto.Id);
+        if (contact == null)
+        {
+            return null;
+        }
+
+        contact.Name = dto.Name;
+        contact.Relationship = dto.Relationship;
+        contact.Phone = dto.Phone;
+        contact.Email = dto.Email;
+        contact.UpdatedDate = DateTime.UtcNow;
+
+        await _unitOfWork.Employees.UpdateAsync(employee);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new EmployeeContactPersonDto
+        {
+            Id = contact.Id,
+            EmployeeId = employeeId,
+            Name = contact.Name,
+            Relationship = contact.Relationship,
+            Phone = contact.Phone,
+            Email = contact.Email
+        };
+    }
+
+    public async Task<bool> RemoveContactPersonAsync(int employeeId, int contactPersonId)
+    {
+        EnsureAuthenticated();
+        var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId, includeInactive: true);
+        if (employee == null)
+        {
+            return false;
+        }
+
+        EnsureCanModifyEmployee(employee);
+
+        var contact = employee.ContactPersons.FirstOrDefault(c => c.Id == contactPersonId);
+        if (contact == null)
+        {
+            return false;
+        }
+
+        contact.Status = StatusCode.Rejected;
+        contact.UpdatedDate = DateTime.UtcNow;
+        await _unitOfWork.Employees.UpdateAsync(employee);
+        await _unitOfWork.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<IEnumerable<EmployeeSearchResultDto>> SearchEmployeesAsync(string query)
+    {
+        var employees = await GetEmployeesForCurrentUserAsync();
+        var filtered = employees.Where(e =>
+            string.IsNullOrWhiteSpace(query) ||
+            ($"{e.FirstName} {e.LastName}").Contains(query, StringComparison.OrdinalIgnoreCase));
+
+        return filtered.Select(e => new EmployeeSearchResultDto
+        {
+            Id = e.Id,
+            FullName = $"{e.FirstName} {e.LastName}".Trim()
+        }).ToList();
+    }
+
+    private IEnumerable<Employee> ApplyVisibilityFilter(IEnumerable<Employee> employees)
+    {
+        if (IsAdmin())
+        {
+            return employees;
+        }
+
+        if (IsHr())
+        {
+            return employees.Where(e => !IsEmployeeAdmin(e));
+        }
+
+        if (IsManager())
+        {
+            var managerEmployeeId = _currentUser.EmployeeId ?? 0;
+            return employees.Where(e => e.ManagerId == managerEmployeeId);
+        }
+
+        if (_currentUser.EmployeeId.HasValue)
+        {
+            return employees.Where(e => e.Id == _currentUser.EmployeeId.Value);
+        }
+
+        return Enumerable.Empty<Employee>();
+    }
+
+    private bool IsEmployeeAdmin(Employee employee)
+    {
+        return string.Equals(employee.User?.Role?.Name, "Admin", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsAdmin() => string.Equals(_currentUser.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsHr() => string.Equals(_currentUser.Role, "HR", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsManager() => string.Equals(_currentUser.Role, "Manager", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsAdminOrHr() => IsAdmin() || IsHr();
+
+    private bool IsManagerOf(Employee employee)
+    {
+        return _currentUser.EmployeeId.HasValue && employee.ManagerId == _currentUser.EmployeeId.Value;
+    }
+
+    private void EnsureAuthenticated()
+    {
+        if (!_currentUser.IsAuthenticated)
+        {
+            throw new UnauthorizedAccessException("User not authenticated.");
+        }
+    }
+
+    private void EnsureCanModifyEmployee(Employee employee)
+    {
+        if (IsAdminOrHr())
+        {
+            return;
+        }
+
+        if (IsManagerOf(employee))
+        {
+            return;
+        }
+
+        if (_currentUser.EmployeeId.HasValue && employee.Id == _currentUser.EmployeeId.Value)
+        {
+            return;
+        }
+
+        throw new UnauthorizedAccessException("Not allowed to modify employee.");
+    }
+
+    private void EnsureCanManageEmployees(int? managerId)
+    {
+        if (IsAdminOrHr())
+        {
+            return;
+        }
+
+        if (IsManager())
+        {
+            if (managerId.HasValue && _currentUser.EmployeeId.HasValue && managerId.Value != _currentUser.EmployeeId.Value)
+            {
+                throw new UnauthorizedAccessException("Managers can only create subordinates.");
+            }
+            return;
+        }
+
+        throw new UnauthorizedAccessException("Not allowed to create employee.");
     }
 
     private static EmployeeDto MapEmployee(Employee employee)
@@ -150,15 +390,18 @@ public class EmployeeService : IEmployeeService
             Department = employee.Department,
             Position = employee.Position,
             BasicSalary = employee.BasicSalary,
-            ContactPersons = employee.ContactPersons.Select(c => new EmployeeContactPersonDto
-            {
-                Id = c.Id,
-                EmployeeId = employee.Id,
-                Name = c.Name,
-                Relationship = c.Relationship,
-                Phone = c.Phone,
-                Email = c.Email
-            }).ToList()
+            ManagerId = employee.ManagerId,
+            ContactPersons = employee.ContactPersons
+                .Where(c => c.Status != StatusCode.Rejected)
+                .Select(c => new EmployeeContactPersonDto
+                {
+                    Id = c.Id,
+                    EmployeeId = employee.Id,
+                    Name = c.Name,
+                    Relationship = c.Relationship,
+                    Phone = c.Phone,
+                    Email = c.Email
+                }).ToList()
         };
     }
 }

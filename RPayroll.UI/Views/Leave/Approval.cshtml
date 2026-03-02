@@ -1,0 +1,70 @@
+@{
+    ViewData["Title"] = "Leave Approval";
+}
+
+<h2>Leave Approval</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-striped" id="leaveTable">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Employee</th>
+                    <th>Period</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const badge = status => {
+    if (status === 0) return '<span class="badge bg-warning">Pending</span>';
+    if (status === 30) return '<span class="badge bg-success">Approved</span>';
+    return '<span class="badge bg-danger">Rejected</span>';
+};
+
+async function loadLeaves() {
+    const response = await fetch('/Leave/GetAll');
+    const data = response.ok ? await response.json() : [];
+    const tbody = document.querySelector('#leaveTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(leave => {
+        const row = document.createElement('tr');
+        const actions = leave.status === 0 ? `
+            <button class="btn btn-sm btn-success" onclick="approveLeave(${leave.id})">Approve</button>
+            <button class="btn btn-sm btn-danger ms-1" onclick="rejectLeave(${leave.id})">Reject</button>
+        ` : '';
+        row.innerHTML = `
+            <td>${leave.id}</td>
+            <td>${leave.employeeId}</td>
+            <td>${leave.startDate} - ${leave.endDate}</td>
+            <td>${badge(leave.status)}</td>
+            <td>${actions}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+window.approveLeave = async function(id) {
+    const response = await fetch(`/Leave/Approve/${id}`, { method: 'PUT' });
+    if (response.ok) {
+        await loadLeaves();
+    }
+}
+
+window.rejectLeave = async function(id) {
+    const response = await fetch(`/Leave/Reject/${id}`, { method: 'PUT' });
+    if (response.ok) {
+        await loadLeaves();
+    }
+}
+
+loadLeaves();
+</script>
+}

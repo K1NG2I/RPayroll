@@ -7,17 +7,20 @@ public class UnitOfWork : IUnitOfWork
     public UnitOfWork(
         IEmployeeRepository employees,
         IUserRepository users,
+        IRoleRepository roles,
         ILeaveRepository leaves,
         IPayrollRepository payrolls)
     {
         Employees = employees;
         Users = users;
+        Roles = roles;
         Leaves = leaves;
         Payrolls = payrolls;
     }
 
     public IEmployeeRepository Employees { get; }
     public IUserRepository Users { get; }
+    public IRoleRepository Roles { get; }
     public ILeaveRepository Leaves { get; }
     public IPayrollRepository Payrolls { get; }
 

@@ -10,6 +10,7 @@ public class CreateEmployeeDto
     public string? Department { get; set; }
     public string? Position { get; set; }
     public decimal BasicSalary { get; set; }
+    public int? ManagerId { get; set; }
 
     public bool CreateLogin { get; set; }
     public string? Username { get; set; }

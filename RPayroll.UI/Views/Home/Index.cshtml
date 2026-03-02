@@ -1,8 +1,50 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Employees</h6>
+                <h3 id="employeeCount">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Leaves</h6>
+                <h3 id="leaveCount">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Payrolls</h6>
+                <h3 id="payrollCount">-</h3>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+<script>
+async function loadDashboard() {
+    const employees = await fetch('/Employee/GetAll');
+    const leaves = await fetch('/Leave/GetAll');
+    const payrolls = await fetch('/Payroll/GetAll');
+
+    const employeeData = employees.ok ? await employees.json() : [];
+    const leaveData = leaves.ok ? await leaves.json() : [];
+    const payrollData = payrolls.ok ? await payrolls.json() : [];
+
+    document.getElementById('employeeCount').innerText = employeeData.length;
+    document.getElementById('leaveCount').innerText = leaveData.length;
+    document.getElementById('payrollCount').innerText = payrollData.length;
+}
+
+loadDashboard();
+</script>
+}

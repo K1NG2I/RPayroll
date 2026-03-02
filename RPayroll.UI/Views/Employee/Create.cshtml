@@ -4,70 +4,79 @@
 
 <h2>Create Employee</h2>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label class="form-label">First Name</label>
-            <input class="form-control" id="firstName" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Last Name</label>
-            <input class="form-control" id="lastName" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input class="form-control" id="email" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Phone</label>
-            <input class="form-control" id="phone" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Department</label>
-            <input class="form-control" id="department" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Position</label>
-            <input class="form-control" id="position" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Basic Salary</label>
-            <input class="form-control" id="basicSalary" type="number" step="0.01" />
-        </div>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">First Name</label>
+                    <input class="form-control" id="firstName" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input class="form-control" id="lastName" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" id="email" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" id="phone" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <input class="form-control" id="department" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Position</label>
+                    <input class="form-control" id="position" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Basic Salary</label>
+                    <input class="form-control" id="basicSalary" type="number" step="0.01" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Manager</label>
+                    <select class="form-select" id="managerSelect"></select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h5>Contact Person (Optional)</h5>
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" id="contactName" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Relationship</label>
+                    <input class="form-control" id="contactRelationship" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" id="contactPhone" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" id="contactEmail" />
+                </div>
 
-        <h5>Contact Person (Optional)</h5>
-        <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input class="form-control" id="contactName" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Relationship</label>
-            <input class="form-control" id="contactRelationship" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Phone</label>
-            <input class="form-control" id="contactPhone" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input class="form-control" id="contactEmail" />
-        </div>
-
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="createLogin" />
-            <label class="form-check-label">Create Login</label>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input class="form-control" id="username" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input class="form-control" id="password" type="password" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Role</label>
-            <input class="form-control" id="roleName" placeholder="Employee" />
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="createLogin" />
+                    <label class="form-check-label">Create Login</label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input class="form-control" id="username" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input class="form-control" id="password" type="password" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <input class="form-control" id="roleName" placeholder="Employee" />
+                </div>
+            </div>
         </div>
 
         <button class="btn btn-primary" id="createBtn">Create</button>
@@ -77,6 +86,18 @@
 
 @section Scripts {
 <script>
+$('#managerSelect').select2({
+    placeholder: 'Search manager',
+    ajax: {
+        url: '/Employee/Search',
+        delay: 250,
+        data: params => ({ query: params.term || '' }),
+        processResults: data => ({
+            results: data.map(item => ({ id: item.id, text: item.fullName }))
+        })
+    }
+});
+
 document.getElementById('createBtn').addEventListener('click', async () => {
     const contactName = document.getElementById('contactName').value;
     const contacts = [];
@@ -97,6 +118,7 @@ document.getElementById('createBtn').addEventListener('click', async () => {
         department: document.getElementById('department').value,
         position: document.getElementById('position').value,
         basicSalary: parseFloat(document.getElementById('basicSalary').value || '0'),
+        managerId: $('#managerSelect').val() ? parseInt($('#managerSelect').val()) : null,
         createLogin: document.getElementById('createLogin').checked,
         username: document.getElementById('username').value,
         password: document.getElementById('password').value,

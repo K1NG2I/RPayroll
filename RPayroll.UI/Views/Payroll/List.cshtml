@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Payrolls";
+}
+
+<h2>Payrolls</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-striped" id="payrollTable">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Employee</th>
+                    <th>Period</th>
+                    <th>Net Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="deletePayrollModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">Delete this payroll?</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmPayrollDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+let payrollDeleteId = null;
+let payrollDeleteModal;
+
+async function loadPayrolls() {
+    const response = await fetch('/Payroll/GetAll');
+    const data = response.ok ? await response.json() : [];
+    const tbody = document.querySelector('#payrollTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(payroll => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${payroll.id}</td>
+            <td>${payroll.employeeId}</td>
+            <td>${payroll.periodStart} - ${payroll.periodEnd}</td>
+            <td>${payroll.netSalary}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-danger" onclick="openPayrollDelete(${payroll.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+window.openPayrollDelete = function(id) {
+    payrollDeleteId = id;
+    payrollDeleteModal.show();
+}
+
+document.getElementById('confirmPayrollDelete').addEventListener('click', async () => {
+    if (!payrollDeleteId) return;
+    const response = await fetch(`/Payroll/Delete/${payrollDeleteId}`, { method: 'DELETE' });
+    if (response.ok) {
+        payrollDeleteModal.hide();
+        await loadPayrolls();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    payrollDeleteModal = new bootstrap.Modal(document.getElementById('deletePayrollModal'));
+    loadPayrolls();
+});
+</script>
+}

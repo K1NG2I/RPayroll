@@ -6,5 +6,8 @@ public interface ILeaveService
 {
     Task<LeaveRequestDto> ApplyLeaveAsync(LeaveRequestDto dto);
     Task<LeaveRequestDto?> ApproveLeaveAsync(int leaveId);
+    Task<LeaveRequestDto?> RejectLeaveAsync(int leaveId);
     Task<IEnumerable<LeaveRequestDto>> GetLeavesByEmployeeAsync(int employeeId);
+    Task<IEnumerable<LeaveRequestDto>> GetLeavesForCurrentUserAsync();
+    Task<bool> SoftDeleteLeaveAsync(int leaveId);
 }

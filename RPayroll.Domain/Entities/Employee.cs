@@ -13,6 +13,10 @@ public class Employee : BaseEntity
     public string? Position { get; set; }
     public decimal BasicSalary { get; set; }
 
+    public int? ManagerId { get; set; }
+    public Employee? Manager { get; set; }
+    public List<Employee> Subordinates { get; set; } = new();
+
     public int? UserId { get; set; }
     public User? User { get; set; }
 

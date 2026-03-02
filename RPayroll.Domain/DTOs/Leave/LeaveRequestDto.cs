@@ -10,4 +10,6 @@ public class LeaveRequestDto
     public DateTime EndDate { get; set; }
     public string? Reason { get; set; }
     public StatusCode Status { get; set; }
+    public int? ApprovedByUserId { get; set; }
+    public DateTime? ApprovedDate { get; set; }
 }

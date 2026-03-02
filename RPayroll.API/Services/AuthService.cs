@@ -19,7 +19,7 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
     {
-        var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username);
+        var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username, includeInactive: true);
         if (user == null)
         {
             return null;
@@ -36,6 +36,9 @@ public class AuthService : IAuthService
         }
 
         var token = await _tokenGenerator.GenerateTokenAsync();
+        user.Token = token;
+        await _unitOfWork.Users.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
 
         return new LoginResponseDto
         {

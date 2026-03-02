@@ -7,27 +7,31 @@
 
 <div id="employeeInfo" class="mb-4"></div>
 
-<h5>Add Contact Person</h5>
-<div class="row">
-    <div class="col-md-6">
-        <div class="mb-2">
-            <label class="form-label">Name</label>
-            <input class="form-control" id="contactName" />
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5>Add Contact Person</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" id="contactName" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Relationship</label>
+                    <input class="form-control" id="contactRelationship" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" id="contactPhone" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" id="contactEmail" />
+                </div>
+                <button class="btn btn-primary" id="addContactBtn">Add Contact</button>
+                <div class="mt-3" id="contactResult"></div>
+            </div>
         </div>
-        <div class="mb-2">
-            <label class="form-label">Relationship</label>
-            <input class="form-control" id="contactRelationship" />
-        </div>
-        <div class="mb-2">
-            <label class="form-label">Phone</label>
-            <input class="form-control" id="contactPhone" />
-        </div>
-        <div class="mb-2">
-            <label class="form-label">Email</label>
-            <input class="form-control" id="contactEmail" />
-        </div>
-        <button class="btn btn-primary" id="addContactBtn">Add Contact</button>
-        <div class="mt-3" id="contactResult"></div>
     </div>
 </div>
 
@@ -44,9 +48,14 @@ async function loadEmployee() {
         return;
     }
 
-    const contacts = (data.contactPersons || []).map(c => `<li>${c.name} (${c.relationship ?? ''})</li>`).join('');
+    const contacts = (data.contactPersons || []).map(c => `
+        <li class="d-flex justify-content-between align-items-center">
+            <span>${c.name} (${c.relationship ?? ''})</span>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeContact(${c.id})">Remove</button>
+        </li>`).join('');
+
     container.innerHTML = `
-        <div class="card">
+        <div class="card shadow-sm">
             <div class="card-body">
                 <h5>${data.firstName} ${data.lastName}</h5>
                 <p>Email: ${data.email ?? ''}</p>
@@ -56,7 +65,7 @@ async function loadEmployee() {
                 <p>Basic Salary: ${data.basicSalary}</p>
                 <div>
                     <strong>Contacts</strong>
-                    <ul>${contacts || '<li>No contacts</li>'}</ul>
+                    <ul class="list-unstyled">${contacts || '<li>No contacts</li>'}</ul>
                 </div>
             </div>
         </div>
@@ -64,6 +73,13 @@ async function loadEmployee() {
 }
 
 loadEmployee();
+
+window.removeContact = async function(contactId) {
+    const response = await fetch(`/Employee/RemoveContact?id=${employeeId}&contactId=${contactId}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadEmployee();
+    }
+}
 
 document.getElementById('addContactBtn').addEventListener('click', async () => {
     const payload = {

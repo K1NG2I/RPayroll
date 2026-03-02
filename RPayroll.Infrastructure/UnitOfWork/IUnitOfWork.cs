@@ -6,6 +6,7 @@ public interface IUnitOfWork
 {
     IEmployeeRepository Employees { get; }
     IUserRepository Users { get; }
+    IRoleRepository Roles { get; }
     ILeaveRepository Leaves { get; }
     IPayrollRepository Payrolls { get; }
 

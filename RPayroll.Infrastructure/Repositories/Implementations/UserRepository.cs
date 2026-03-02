@@ -1,26 +1,41 @@
 using RPayroll.Domain.Entities;
+using RPayroll.Domain.Enums;
 using RPayroll.Infrastructure.Repositories.Interfaces;
 
 namespace RPayroll.Infrastructure.Repositories.Implementations;
 
 public class UserRepository : IUserRepository
 {
-    public Task<User?> GetByIdAsync(int id)
-    {
-        var user = InMemoryDataStore.Users.FirstOrDefault(u => u.Id == id);
-        return Task.FromResult(user);
-    }
-
-    public Task<User?> GetByUsernameAsync(string username)
+    public Task<User?> GetByIdAsync(int id, bool includeInactive = false)
     {
         var user = InMemoryDataStore.Users.FirstOrDefault(u =>
-            string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
+            u.Id == id && (includeInactive || u.Status != StatusCode.Rejected));
         return Task.FromResult(user);
     }
 
-    public Task<List<User>> GetAllAsync()
+    public Task<User?> GetByUsernameAsync(string username, bool includeInactive = false)
     {
-        return Task.FromResult(InMemoryDataStore.Users.ToList());
+        var user = InMemoryDataStore.Users.FirstOrDefault(u =>
+            string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase) &&
+            (includeInactive || u.Status != StatusCode.Rejected));
+        return Task.FromResult(user);
+    }
+
+    public Task<User?> GetByTokenAsync(string token)
+    {
+        var user = InMemoryDataStore.Users.FirstOrDefault(u =>
+            string.Equals(u.Token, token, StringComparison.Ordinal));
+        return Task.FromResult(user);
+    }
+
+    public Task<List<User>> GetAllAsync(bool includeInactive = false)
+    {
+        var query = InMemoryDataStore.Users.AsEnumerable();
+        if (!includeInactive)
+        {
+            query = query.Where(u => u.Status != StatusCode.Rejected);
+        }
+        return Task.FromResult(query.ToList());
     }
 
     public Task AddAsync(User user)

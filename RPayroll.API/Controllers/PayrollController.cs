@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RPayroll.API.Models;
 using RPayroll.Domain.Interfaces.Services;
@@ -5,7 +6,8 @@ using RPayroll.Domain.Interfaces.Services;
 namespace RPayroll.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/payroll")]
+[Authorize]
 public class PayrollController : ControllerBase
 {
     private readonly IPayrollService _payrollService;
@@ -30,5 +32,20 @@ public class PayrollController : ControllerBase
     {
         var payrolls = await _payrollService.GetPayrollsByEmployeeAsync(employeeId);
         return Ok(payrolls);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetForCurrentUser()
+    {
+        var payrolls = await _payrollService.GetPayrollsForCurrentUserAsync();
+        return Ok(payrolls);
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var result = await _payrollService.DeletePayrollAsync(id);
+        return result ? Ok() : NotFound();
     }
 }

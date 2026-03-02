@@ -32,6 +32,25 @@ public class ApiClient
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }
 
+    public async Task<TResponse?> PutAsync<TRequest, TResponse>(string url, TRequest request)
+    {
+        ApplyAuthHeader();
+        var response = await _httpClient.PutAsJsonAsync(url, request);
+        if (!response.IsSuccessStatusCode)
+        {
+            return default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TResponse>();
+    }
+
+    public async Task<bool> DeleteAsync(string url)
+    {
+        ApplyAuthHeader();
+        var response = await _httpClient.DeleteAsync(url);
+        return response.IsSuccessStatusCode;
+    }
+
     private void ApplyAuthHeader()
     {
         _httpClient.DefaultRequestHeaders.Authorization = null;

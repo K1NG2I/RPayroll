@@ -1,19 +1,42 @@
 using RPayroll.Domain.Entities;
+using RPayroll.Domain.Enums;
 using RPayroll.Infrastructure.Repositories.Interfaces;
 
 namespace RPayroll.Infrastructure.Repositories.Implementations;
 
 public class EmployeeRepository : IEmployeeRepository
 {
-    public Task<Employee?> GetByIdAsync(int id)
+    public Task<Employee?> GetByIdAsync(int id, bool includeInactive = false)
     {
-        var employee = InMemoryDataStore.Employees.FirstOrDefault(e => e.Id == id);
+        var employee = InMemoryDataStore.Employees.FirstOrDefault(e =>
+            e.Id == id && (includeInactive || e.Status != StatusCode.Rejected));
+        if (employee != null && !includeInactive)
+        {
+            employee.ContactPersons = employee.ContactPersons
+                .Where(c => c.Status != StatusCode.Rejected)
+                .ToList();
+        }
         return Task.FromResult(employee);
     }
 
-    public Task<List<Employee>> GetAllAsync()
+    public Task<List<Employee>> GetAllAsync(bool includeInactive = false)
     {
-        return Task.FromResult(InMemoryDataStore.Employees.ToList());
+        var query = InMemoryDataStore.Employees.AsEnumerable();
+        if (!includeInactive)
+        {
+            query = query.Where(e => e.Status != StatusCode.Rejected);
+        }
+        var results = query.ToList();
+        if (!includeInactive)
+        {
+            foreach (var employee in results)
+            {
+                employee.ContactPersons = employee.ContactPersons
+                    .Where(c => c.Status != StatusCode.Rejected)
+                    .ToList();
+            }
+        }
+        return Task.FromResult(results);
     }
 
     public Task AddAsync(Employee employee)

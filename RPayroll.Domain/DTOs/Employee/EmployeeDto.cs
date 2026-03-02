@@ -11,5 +11,6 @@ public class EmployeeDto
     public string? Department { get; set; }
     public string? Position { get; set; }
     public decimal BasicSalary { get; set; }
+    public int? ManagerId { get; set; }
     public List<EmployeeContactPersonDto> ContactPersons { get; set; } = new();
 }

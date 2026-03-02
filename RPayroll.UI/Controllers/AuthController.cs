@@ -30,7 +30,7 @@ public class AuthController : Controller
             return Unauthorized();
         }
 
-        _tokenStore.SetToken(response.Token);
+        _tokenStore.SetToken(response.Token, response.UserId, response.Username, response.Role);
         return Ok(response);
     }
 }

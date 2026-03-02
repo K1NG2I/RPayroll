@@ -4,30 +4,46 @@
 
 <h2>Generate Payroll</h2>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label class="form-label">Employee Id</label>
-            <input class="form-control" id="employeeId" type="number" />
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Employee</label>
+                    <select class="form-select" id="employeeSelect"></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Period Start</label>
+                    <input class="form-control" id="periodStart" type="date" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Period End</label>
+                    <input class="form-control" id="periodEnd" type="date" />
+                </div>
+                <button class="btn btn-primary" id="generateBtn">Generate</button>
+                <div class="mt-3" id="generateResult"></div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Period Start</label>
-            <input class="form-control" id="periodStart" type="date" />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Period End</label>
-            <input class="form-control" id="periodEnd" type="date" />
-        </div>
-        <button class="btn btn-primary" id="generateBtn">Generate</button>
-        <div class="mt-3" id="generateResult"></div>
     </div>
 </div>
 
 @section Scripts {
 <script>
+$('#employeeSelect').select2({
+    placeholder: 'Search employee',
+    ajax: {
+        url: '/Employee/Search',
+        delay: 250,
+        data: params => ({ query: params.term || '' }),
+        processResults: data => ({
+            results: data.map(item => ({ id: item.id, text: item.fullName }))
+        })
+    }
+});
+
 document.getElementById('generateBtn').addEventListener('click', async () => {
     const payload = {
-        employeeId: parseInt(document.getElementById('employeeId').value || '0'),
+        employeeId: $('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0,
         periodStart: document.getElementById('periodStart').value,
         periodEnd: document.getElementById('periodEnd').value
     };

@@ -1,0 +1,185 @@
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<h2>User Management</h2>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5>Create User</h5>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <input class="form-control" id="userName" placeholder="Username" />
+            </div>
+            <div class="col-md-4 mb-2">
+                <input class="form-control" id="userPassword" type="password" placeholder="Password" />
+            </div>
+            <div class="col-md-4 mb-2">
+                <select class="form-select" id="userRole"></select>
+            </div>
+        </div>
+        <button class="btn btn-primary" id="createUserBtn">Create</button>
+        <div class="mt-2" id="userCreateResult"></div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-striped" id="userTable">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="userEditModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editUserId" />
+                <div class="mb-2">
+                    <label class="form-label">Username</label>
+                    <input class="form-control" id="editUserName" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Password</label>
+                    <input class="form-control" id="editUserPassword" type="password" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" id="editUserRole"></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveUserBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+let userEditModal;
+let rolesCache = [];
+
+async function loadRoles() {
+    const response = await fetch('/Role/GetAll');
+    rolesCache = response.ok ? await response.json() : [];
+    const roleSelect = document.getElementById('userRole');
+    const editRoleSelect = document.getElementById('editUserRole');
+    roleSelect.innerHTML = '';
+    editRoleSelect.innerHTML = '';
+    rolesCache.forEach(role => {
+        const option = new Option(role.name, role.id);
+        roleSelect.appendChild(option.cloneNode(true));
+        editRoleSelect.appendChild(option);
+    });
+}
+
+async function loadUsers() {
+    const response = await fetch('/User/GetAll');
+    const data = response.ok ? await response.json() : [];
+    const tbody = document.querySelector('#userTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(user => {
+        const row = document.createElement('tr');
+        const status = user.status === 200 ? 'Disabled' : 'Active';
+        row.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.username}</td>
+            <td>${user.roleName}</td>
+            <td>${status}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary" onclick="openUserEdit(${user.id})">Edit</button>
+                <button class="btn btn-sm btn-outline-danger ms-1" onclick="disableUser(${user.id})">Disable</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+window.openUserEdit = async function(id) {
+    const response = await fetch(`/User/GetAll`);
+    const users = response.ok ? await response.json() : [];
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editUserName').value = user.username;
+    document.getElementById('editUserPassword').value = '';
+    document.getElementById('editUserRole').value = user.roleId;
+
+    userEditModal.show();
+}
+
+window.disableUser = async function(id) {
+    const response = await fetch(`/User/Disable/${id}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadUsers();
+    }
+}
+
+document.getElementById('createUserBtn').addEventListener('click', async () => {
+    const payload = {
+        username: document.getElementById('userName').value,
+        password: document.getElementById('userPassword').value,
+        roleId: parseInt(document.getElementById('userRole').value)
+    };
+
+    const response = await fetch('/User/Create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const resultEl = document.getElementById('userCreateResult');
+    if (response.ok) {
+        resultEl.innerHTML = '<div class="alert alert-success">User created</div>';
+        await loadUsers();
+    } else {
+        resultEl.innerHTML = '<div class="alert alert-danger">Create failed</div>';
+    }
+});
+
+document.getElementById('saveUserBtn').addEventListener('click', async () => {
+    const id = document.getElementById('editUserId').value;
+    const payload = {
+        id: parseInt(id),
+        username: document.getElementById('editUserName').value,
+        password: document.getElementById('editUserPassword').value,
+        roleId: parseInt(document.getElementById('editUserRole').value),
+        status: 30
+    };
+
+    const response = await fetch(`/User/Update/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+        userEditModal.hide();
+        await loadUsers();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    userEditModal = new bootstrap.Modal(document.getElementById('userEditModal'));
+    await loadRoles();
+    await loadUsers();
+});
+</script>
+}

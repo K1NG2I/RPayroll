@@ -1,24 +1,36 @@
 using RPayroll.Domain.Entities;
+using RPayroll.Domain.Enums;
 using RPayroll.Infrastructure.Repositories.Interfaces;
 
 namespace RPayroll.Infrastructure.Repositories.Implementations;
 
 public class PayrollRepository : IPayrollRepository
 {
-    public Task<Payroll?> GetByIdAsync(int id)
+    public Task<Payroll?> GetByIdAsync(int id, bool includeInactive = false)
     {
-        var payroll = InMemoryDataStore.Payrolls.FirstOrDefault(p => p.Id == id);
+        var payroll = InMemoryDataStore.Payrolls.FirstOrDefault(p =>
+            p.Id == id && (includeInactive || p.Status != StatusCode.Rejected));
         return Task.FromResult(payroll);
     }
 
-    public Task<List<Payroll>> GetAllAsync()
+    public Task<List<Payroll>> GetAllAsync(bool includeInactive = false)
     {
-        return Task.FromResult(InMemoryDataStore.Payrolls.ToList());
+        var query = InMemoryDataStore.Payrolls.AsEnumerable();
+        if (!includeInactive)
+        {
+            query = query.Where(p => p.Status != StatusCode.Rejected);
+        }
+        return Task.FromResult(query.ToList());
     }
 
-    public Task<List<Payroll>> GetByEmployeeAsync(int employeeId)
+    public Task<List<Payroll>> GetByEmployeeAsync(int employeeId, bool includeInactive = false)
     {
-        var payrolls = InMemoryDataStore.Payrolls.Where(p => p.EmployeeId == employeeId).ToList();
+        var query = InMemoryDataStore.Payrolls.Where(p => p.EmployeeId == employeeId);
+        if (!includeInactive)
+        {
+            query = query.Where(p => p.Status != StatusCode.Rejected);
+        }
+        var payrolls = query.ToList();
         return Task.FromResult(payrolls);
     }
 

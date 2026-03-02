@@ -24,10 +24,36 @@ public static class InMemoryDataStore
         {
             Id = NextRoleId(),
             Name = "Admin",
+            HierarchyLevel = 1,
             CreatedDate = DateTime.UtcNow,
             Status = StatusCode.Accepted
         };
-        Roles.Add(adminRole);
+        var hrRole = new Role
+        {
+            Id = NextRoleId(),
+            Name = "HR",
+            HierarchyLevel = 2,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+        var managerRole = new Role
+        {
+            Id = NextRoleId(),
+            Name = "Manager",
+            HierarchyLevel = 3,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+        var employeeRole = new Role
+        {
+            Id = NextRoleId(),
+            Name = "Employee",
+            HierarchyLevel = 4,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+
+        Roles.AddRange(new[] { adminRole, hrRole, managerRole, employeeRole });
 
         var adminUser = new User
         {
@@ -39,8 +65,126 @@ public static class InMemoryDataStore
             CreatedDate = DateTime.UtcNow,
             Status = StatusCode.Accepted
         };
-        Users.Add(adminUser);
+
+        var hrUser = new User
+        {
+            Id = NextUserId(),
+            Username = "hr",
+            Password = "hr123",
+            RoleId = hrRole.Id,
+            Role = hrRole,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+
+        var managerEmployee = new Employee
+        {
+            Id = NextEmployeeId(),
+            FirstName = "Mark",
+            LastName = "Manager",
+            Department = "Operations",
+            Position = "Manager",
+            BasicSalary = 80000,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+
+        var managerUser = new User
+        {
+            Id = NextUserId(),
+            Username = "manager",
+            Password = "manager123",
+            RoleId = managerRole.Id,
+            Role = managerRole,
+            EmployeeId = managerEmployee.Id,
+            Employee = managerEmployee,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+        managerEmployee.UserId = managerUser.Id;
+        managerEmployee.User = managerUser;
+
+        var employeeOne = new Employee
+        {
+            Id = NextEmployeeId(),
+            FirstName = "Eve",
+            LastName = "Worker",
+            Department = "Operations",
+            Position = "Associate",
+            BasicSalary = 45000,
+            ManagerId = managerEmployee.Id,
+            Manager = managerEmployee,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+
+        var employeeTwo = new Employee
+        {
+            Id = NextEmployeeId(),
+            FirstName = "Sam",
+            LastName = "Staff",
+            Department = "Operations",
+            Position = "Associate",
+            BasicSalary = 46000,
+            ManagerId = managerEmployee.Id,
+            Manager = managerEmployee,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+
+        managerEmployee.Subordinates.AddRange(new[] { employeeOne, employeeTwo });
+
+        var employeeUser = new User
+        {
+            Id = NextUserId(),
+            Username = "employee",
+            Password = "employee123",
+            RoleId = employeeRole.Id,
+            Role = employeeRole,
+            EmployeeId = employeeOne.Id,
+            Employee = employeeOne,
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Accepted
+        };
+        employeeOne.UserId = employeeUser.Id;
+        employeeOne.User = employeeUser;
+
+        Users.AddRange(new[] { adminUser, hrUser, managerUser, employeeUser });
         adminRole.Users.Add(adminUser);
+        hrRole.Users.Add(hrUser);
+        managerRole.Users.Add(managerUser);
+        employeeRole.Users.Add(employeeUser);
+
+        Employees.AddRange(new[] { managerEmployee, employeeOne, employeeTwo });
+
+        var pendingLeave = new LeaveRequest
+        {
+            Id = NextLeaveId(),
+            EmployeeId = employeeOne.Id,
+            Employee = employeeOne,
+            StartDate = DateTime.UtcNow.Date.AddDays(2),
+            EndDate = DateTime.UtcNow.Date.AddDays(4),
+            Reason = "Medical",
+            CreatedDate = DateTime.UtcNow,
+            Status = StatusCode.Pending
+        };
+
+        var approvedLeave = new LeaveRequest
+        {
+            Id = NextLeaveId(),
+            EmployeeId = employeeTwo.Id,
+            Employee = employeeTwo,
+            StartDate = DateTime.UtcNow.Date.AddDays(-5),
+            EndDate = DateTime.UtcNow.Date.AddDays(-3),
+            Reason = "Vacation",
+            CreatedDate = DateTime.UtcNow.AddDays(-7),
+            ApprovedByUserId = managerUser.Id,
+            ApprovedByUser = managerUser,
+            ApprovedDate = DateTime.UtcNow.AddDays(-6),
+            Status = StatusCode.Accepted
+        };
+
+        LeaveRequests.AddRange(new[] { pendingLeave, approvedLeave });
     }
 
     public static int NextEmployeeId() => _employeeId++;

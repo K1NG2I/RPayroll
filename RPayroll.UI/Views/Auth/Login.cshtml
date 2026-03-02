@@ -37,6 +37,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     if (response.ok) {
         const data = await response.json();
         resultEl.innerHTML = `<div class="alert alert-success">Logged in as ${data.username} (${data.role})</div>`;
+        setTimeout(() => window.location = '/Home/Index', 500);
     } else {
         resultEl.innerHTML = '<div class="alert alert-danger">Login failed</div>';
     }
