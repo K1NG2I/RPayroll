@@ -1,5 +1,7 @@
+@inject RPayroll.UI.Services.TokenStore TokenStore
 @{
     ViewData["Title"] = "Apply Leave";
+    var isEmployee = string.Equals(TokenStore.Role, "Employee", StringComparison.OrdinalIgnoreCase);
 }
 
 <h2>Apply Leave</h2>
@@ -8,10 +10,20 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
-                <div class="mb-3">
-                    <label class="form-label">Employee</label>
-                    <select class="form-select" id="employeeSelect"></select>
-                </div>
+                @if (isEmployee)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Employee</label>
+                        <div class="form-control-plaintext" id="employeeLabel">Attendance for:</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Employee</label>
+                        <select class="form-select" id="employeeSelect"></select>
+                    </div>
+                }
                 <div class="mb-3">
                     <label class="form-label">Start Date</label>
                     <input class="form-control" id="startDate" type="date" />
@@ -37,6 +49,11 @@
 
 @section Scripts {
 <script>
+let currentEmployeeId = null;
+
+@if (!isEmployee)
+{
+<text>
 $('#employeeSelect').select2({
     placeholder: 'Search employee',
     ajax: {
@@ -48,10 +65,23 @@ $('#employeeSelect').select2({
         })
     }
 });
+</text>
+}
+
+async function loadEmployeeProfile() {
+    const response = await fetch('/Employee/GetMyProfile');
+    const profile = response.ok ? await response.json() : null;
+    if (!profile) return;
+    currentEmployeeId = profile.id;
+    const label = document.getElementById('employeeLabel');
+    if (label) {
+        label.textContent = `Employee: ${profile.firstName} ${profile.lastName}`;
+    }
+}
 
 document.getElementById('applyBtn').addEventListener('click', async () => {
     const payload = {
-        employeeId: $('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0,
+        employeeId: @isEmployee.ToString().ToLower() ? (currentEmployeeId ?? 0) : ($('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0),
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value,
         leaveType: document.getElementById('leaveType').value,
@@ -72,5 +102,12 @@ document.getElementById('applyBtn').addEventListener('click', async () => {
         resultEl.innerHTML = '<div class="alert alert-danger">Leave apply failed</div>';
     }
 });
+
+@if (isEmployee)
+{
+<text>
+loadEmployeeProfile();
+</text>
+}
 </script>
 }
