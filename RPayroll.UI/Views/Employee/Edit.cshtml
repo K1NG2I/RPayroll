@@ -1,12 +1,16 @@
 @inject RPayroll.UI.Services.TokenStore TokenStore
 @{
-    ViewData["Title"] = "Create Employee";
+    ViewData["Title"] = "Edit Employee";
+    var employeeId = (int?)ViewData["EmployeeId"] ?? 0;
     var canManageLogin = string.Equals(TokenStore.Role, "Admin", StringComparison.OrdinalIgnoreCase)
         || string.Equals(TokenStore.Role, "HR", StringComparison.OrdinalIgnoreCase);
     var isHr = string.Equals(TokenStore.Role, "HR", StringComparison.OrdinalIgnoreCase);
+    var isAdmin = string.Equals(TokenStore.Role, "Admin", StringComparison.OrdinalIgnoreCase);
 }
 
-<h2>Create Employee</h2>
+<h2>Edit Employee</h2>
+
+<input type="hidden" id="employeeId" value="@employeeId" />
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -79,7 +83,7 @@
         </div>
         @if (!canManageLogin)
         {
-            <div class="text-muted">Only Admin or HR can create login details.</div>
+            <div class="text-muted">Only Admin or HR can create or update login details.</div>
         }
     </div>
 </div>
@@ -158,8 +162,8 @@
     </div>
 </div>
 
-<button class="btn btn-primary" id="createBtn">Create Employee</button>
-<div class="mt-3" id="createResult"></div>
+<button class="btn btn-primary" id="saveBtn">Save Changes</button>
+<div class="mt-3" id="saveResult"></div>
 
 <div class="modal fade" id="contactModal" tabindex="-1">
     <div class="modal-dialog">
@@ -217,8 +221,10 @@
 
 @section Scripts {
 <script>
+const employeeId = parseInt(document.getElementById('employeeId').value || '0');
 const canManageLogin = @canManageLogin.ToString().ToLower();
 const isHr = @isHr.ToString().ToLower();
+const isAdmin = @isAdmin.ToString().ToLower();
 
 $('#managerSelect').select2({
     placeholder: 'Search manager',
@@ -235,7 +241,10 @@ $('#managerSelect').select2({
 let contactModal;
 let contactDeleteModal;
 let deleteContactId = null;
+let currentUserId = null;
+let currentUserStatus = 30;
 const contacts = [];
+const deletedContactIds = [];
 
 function renderContacts() {
     const tbody = document.querySelector('#contactTable tbody');
@@ -261,7 +270,6 @@ function renderContacts() {
 window.editContact = function(tempId) {
     const contact = contacts.find(c => c.tempId === tempId);
     if (!contact) return;
-
     document.getElementById('contactId').value = contact.tempId;
     document.getElementById('contactName').value = contact.name;
     document.getElementById('contactRelationship').value = contact.relationship ?? '';
@@ -290,19 +298,30 @@ document.getElementById('saveContactBtn').addEventListener('click', () => {
     const tempId = document.getElementById('contactId').value;
     const payload = {
         tempId: tempId ? parseInt(tempId) : Date.now(),
+        id: null,
         name: document.getElementById('contactName').value,
         relationship: document.getElementById('contactRelationship').value,
         phone: document.getElementById('contactPhone').value,
         email: document.getElementById('contactEmail').value,
-        isPrimary: document.getElementById('contactPrimary').checked
+        isPrimary: document.getElementById('contactPrimary').checked,
+        isNew: !tempId,
+        isDirty: true
     };
 
     if (payload.isPrimary) {
-        contacts.forEach(c => c.isPrimary = false);
+        contacts.forEach(c => {
+            c.isPrimary = false;
+            if (!c.isNew) {
+                c.isDirty = true;
+            }
+        });
     }
 
     const existingIndex = contacts.findIndex(c => c.tempId === payload.tempId);
     if (existingIndex >= 0) {
+        const existing = contacts[existingIndex];
+        payload.id = existing.id;
+        payload.isNew = existing.isNew;
         contacts[existingIndex] = payload;
     } else {
         contacts.push(payload);
@@ -316,6 +335,10 @@ document.getElementById('confirmContactDelete').addEventListener('click', () => 
     if (!deleteContactId) return;
     const index = contacts.findIndex(c => c.tempId === deleteContactId);
     if (index >= 0) {
+        const contact = contacts[index];
+        if (contact.id) {
+            deletedContactIds.push(contact.id);
+        }
         contacts.splice(index, 1);
     }
     contactDeleteModal.hide();
@@ -328,7 +351,7 @@ function toggleLoginFields(enabled) {
     });
 }
 
-async function loadRoles() {
+async function loadRoles(selectedRoleId) {
     const response = await fetch('/Role/GetAll');
     const data = response.ok ? await response.json() : [];
     const roleSelect = document.getElementById('roleSelect');
@@ -342,8 +365,79 @@ async function loadRoles() {
         option.textContent = role.name;
         roleSelect.appendChild(option);
     });
+    if (selectedRoleId) {
+        roleSelect.value = selectedRoleId;
+    }
     if (!canManageLogin) {
         roleSelect.disabled = true;
+    }
+}
+
+async function loadEmployee() {
+    const response = await fetch(`/Employee/GetById/${employeeId}`);
+    const emp = response.ok ? await response.json() : null;
+    if (!emp) return;
+
+    document.getElementById('firstName').value = emp.firstName;
+    document.getElementById('lastName').value = emp.lastName;
+    document.getElementById('email').value = emp.email ?? '';
+    document.getElementById('phone').value = emp.phone ?? '';
+    document.getElementById('address').value = emp.address ?? '';
+    document.getElementById('dateOfJoining').value = emp.dateOfJoining ? emp.dateOfJoining.split('T')[0] : '';
+    document.getElementById('department').value = emp.department ?? '';
+    document.getElementById('position').value = emp.position ?? '';
+    document.getElementById('basicSalary').value = emp.basicSalary ?? 0;
+    document.getElementById('bankName').value = emp.bankName ?? '';
+    document.getElementById('bankAccountNumber').value = emp.bankAccountNumber ?? '';
+    document.getElementById('ifscCode').value = emp.ifscCode ?? '';
+    document.getElementById('totalSickLeaves').value = emp.totalSickLeaves ?? 0;
+    document.getElementById('totalCasualLeaves').value = emp.totalCasualLeaves ?? 0;
+    document.getElementById('totalGovernmentLeaves').value = emp.totalGovernmentLeaves ?? 0;
+    document.getElementById('totalUnpaidLeaves').value = emp.totalUnpaidLeaves ?? 0;
+
+    if (emp.managerId) {
+        const option = new Option(emp.managerId, emp.managerId, true, true);
+        $('#managerSelect').append(option).trigger('change');
+    } else {
+        $('#managerSelect').val(null).trigger('change');
+    }
+
+    emp.contactPersons.forEach(c => {
+        contacts.push({
+            tempId: c.id,
+            id: c.id,
+            name: c.name,
+            relationship: c.relationship,
+            phone: c.phone,
+            email: c.email,
+            isPrimary: c.isPrimary,
+            isNew: false,
+            isDirty: false
+        });
+    });
+    renderContacts();
+}
+
+async function loadUserForEmployee() {
+    const response = await fetch('/User/GetAll');
+    const users = response.ok ? await response.json() : [];
+    const match = users.find(u => u.employeeId === employeeId);
+    if (match) {
+        currentUserId = match.id;
+        currentUserStatus = match.status;
+        document.getElementById('createLogin').checked = true;
+        document.getElementById('username').value = match.username;
+        await loadRoles(match.roleId);
+        toggleLoginFields(canManageLogin);
+    } else {
+        document.getElementById('createLogin').checked = false;
+        await loadRoles();
+        toggleLoginFields(false);
+    }
+
+    if (!canManageLogin) {
+        document.getElementById('createLogin').disabled = true;
+        toggleLoginFields(false);
     }
 }
 
@@ -356,65 +450,113 @@ document.getElementById('createLogin').addEventListener('change', (e) => {
     toggleLoginFields(e.target.checked);
 });
 
-const createBtn = document.getElementById('createBtn');
-if (createBtn) {
-    createBtn.addEventListener('click', async () => {
-        const payload = {
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            address: document.getElementById('address').value,
-            dateOfJoining: document.getElementById('dateOfJoining').value,
-            department: document.getElementById('department').value,
-            position: document.getElementById('position').value,
-            basicSalary: parseFloat(document.getElementById('basicSalary').value || '0'),
-            managerId: $('#managerSelect').val() ? parseInt($('#managerSelect').val()) : null,
-            createLogin: document.getElementById('createLogin').checked,
+document.getElementById('saveBtn').addEventListener('click', async () => {
+    const payload = {
+        id: employeeId,
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        dateOfJoining: document.getElementById('dateOfJoining').value,
+        department: document.getElementById('department').value,
+        position: document.getElementById('position').value,
+        basicSalary: parseFloat(document.getElementById('basicSalary').value || '0'),
+        managerId: $('#managerSelect').val() ? parseInt($('#managerSelect').val()) : null,
+        bankName: document.getElementById('bankName').value,
+        bankAccountNumber: document.getElementById('bankAccountNumber').value,
+        ifscCode: document.getElementById('ifscCode').value,
+        totalSickLeaves: parseInt(document.getElementById('totalSickLeaves').value || '0'),
+        totalCasualLeaves: parseInt(document.getElementById('totalCasualLeaves').value || '0'),
+        totalGovernmentLeaves: parseInt(document.getElementById('totalGovernmentLeaves').value || '0'),
+        totalUnpaidLeaves: parseInt(document.getElementById('totalUnpaidLeaves').value || '0')
+    };
+
+    const response = await fetch(`/Employee/Update/${employeeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const resultEl = document.getElementById('saveResult');
+    if (!response.ok) {
+        resultEl.innerHTML = '<div class="alert alert-danger">Update failed</div>';
+        return;
+    }
+
+    if (document.getElementById('createLogin').checked && canManageLogin) {
+        const userPayload = {
             username: document.getElementById('username').value,
-            password: document.getElementById('password').value,
-            roleName: document.getElementById('roleSelect').selectedOptions[0]?.text ?? 'Employee',
-            bankName: document.getElementById('bankName').value,
-            bankAccountNumber: document.getElementById('bankAccountNumber').value,
-            ifscCode: document.getElementById('ifscCode').value,
-            totalSickLeaves: parseInt(document.getElementById('totalSickLeaves').value || '0'),
-            totalCasualLeaves: parseInt(document.getElementById('totalCasualLeaves').value || '0'),
-            totalGovernmentLeaves: parseInt(document.getElementById('totalGovernmentLeaves').value || '0'),
-            totalUnpaidLeaves: parseInt(document.getElementById('totalUnpaidLeaves').value || '0'),
-            contactPersons: contacts.map(c => ({
-                name: c.name,
-                relationship: c.relationship,
-                phone: c.phone,
-                email: c.email,
-                isPrimary: c.isPrimary
-            }))
+            password: document.getElementById('password').value || null,
+            roleId: parseInt(document.getElementById('roleSelect').value || '0'),
+            employeeId: employeeId,
+            status: currentUserStatus
         };
 
-        const response = await fetch('/Employee/Create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const resultEl = document.getElementById('createResult');
-        if (response.ok) {
-            const data = await response.json();
-            resultEl.innerHTML = `<div class="alert alert-success">Created employee #${data.id}</div>`;
+        if (currentUserId) {
+            await fetch(`/User/Update/${currentUserId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userPayload)
+            });
         } else {
-            resultEl.innerHTML = '<div class="alert alert-danger">Create failed</div>';
+            const createPayload = {
+                username: userPayload.username,
+                password: userPayload.password,
+                roleId: userPayload.roleId,
+                employeeId: userPayload.employeeId
+            };
+            await fetch('/User/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(createPayload)
+            });
         }
-    });
-}
+    }
 
-document.addEventListener('DOMContentLoaded', () => {
+    for (const c of contacts) {
+        if (c.isNew) {
+            await fetch(`/Employee/AddContact/${employeeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: c.name,
+                    relationship: c.relationship,
+                    phone: c.phone,
+                    email: c.email,
+                    isPrimary: c.isPrimary
+                })
+            });
+        } else if (c.isDirty) {
+            await fetch(`/Employee/UpdateContact?id=${employeeId}&contactId=${c.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: c.id,
+                    employeeId: employeeId,
+                    name: c.name,
+                    relationship: c.relationship,
+                    phone: c.phone,
+                    email: c.email,
+                    isPrimary: c.isPrimary
+                })
+            });
+        }
+    }
+
+    for (const id of deletedContactIds) {
+        await fetch(`/Employee/RemoveContact?id=${employeeId}&contactId=${id}`, { method: 'DELETE' });
+    }
+
+    resultEl.innerHTML = '<div class="alert alert-success">Employee updated</div>';
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
     contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
     contactDeleteModal = new bootstrap.Modal(document.getElementById('contactDeleteModal'));
-    renderContacts();
     toggleLoginFields(false);
-    loadRoles();
-    if (!canManageLogin) {
-        document.getElementById('createLogin').disabled = true;
-    }
+    await loadEmployee();
+    await loadUserForEmployee();
 });
 </script>
 }

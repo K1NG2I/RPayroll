@@ -28,10 +28,7 @@
                     <label class="form-label">Status</label>
                     <select class="form-select" id="statusSelect">
                         <option value="Present">Present</option>
-                        <option value="Absent">Absent</option>
                         <option value="HalfDay">HalfDay</option>
-                        <option value="Leave">Leave</option>
-                        <option value="Holiday">Holiday</option>
                     </select>
                 </div>
             </div>
@@ -160,10 +157,13 @@ const statusMap = {
     </text>
 }
 
+let currentEmployeeId = null;
+
 async function loadEmployeeName() {
     const profile = await fetch('/Attendance/GetMyProfile');
     const profileData = profile.ok ? await profile.json() : null;
     if (!profileData) return;
+    currentEmployeeId = profileData.id;
     const label = document.getElementById('employeeLabel');
     if (label) {
         label.textContent = `Attendance for: ${profileData.firstName} ${profileData.lastName}`;
@@ -188,7 +188,7 @@ const markBtn = document.getElementById('markBtn');
 if (markBtn) {
     markBtn.addEventListener('click', async () => {
         const payload = {
-            employeeId: $('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0,
+            employeeId: @isEmployee.ToString().ToLower() ? (currentEmployeeId ?? 0) : ($('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0),
             date: document.getElementById('attendanceDate').value,
             checkInTime: document.getElementById('checkIn').value || null,
             checkOutTime: document.getElementById('checkOut').value || null,

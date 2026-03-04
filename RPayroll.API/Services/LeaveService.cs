@@ -45,6 +45,7 @@ public class LeaveService : ILeaveService
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             Reason = dto.Reason,
+            LeaveType = dto.LeaveType,
             CreatedDate = DateTime.UtcNow,
             Status = StatusCode.Pending
         };
@@ -259,6 +260,7 @@ public class LeaveService : ILeaveService
             StartDate = leave.StartDate,
             EndDate = leave.EndDate,
             Reason = leave.Reason,
+            LeaveType = leave.LeaveType,
             Status = leave.Status,
             ApprovedByUserId = leave.ApprovedByUserId,
             ApprovedDate = leave.ApprovedDate,

@@ -171,13 +171,9 @@ public class EmployeeService : IEmployeeService
         employee.BankAccountNumber = dto.BankAccountNumber;
         employee.IFSCCode = dto.IFSCCode;
         employee.TotalSickLeaves = dto.TotalSickLeaves;
-        employee.UsedSickLeaves = dto.UsedSickLeaves;
         employee.TotalCasualLeaves = dto.TotalCasualLeaves;
-        employee.UsedCasualLeaves = dto.UsedCasualLeaves;
         employee.TotalGovernmentLeaves = dto.TotalGovernmentLeaves;
-        employee.UsedGovernmentLeaves = dto.UsedGovernmentLeaves;
         employee.TotalUnpaidLeaves = dto.TotalUnpaidLeaves;
-        employee.UsedUnpaidLeaves = dto.UsedUnpaidLeaves;
         employee.UpdatedDate = DateTime.UtcNow;
         employee.Status = employee.Status == StatusCode.Rejected ? StatusCode.Accepted : employee.Status;
 
@@ -550,6 +546,18 @@ public class EmployeeService : IEmployeeService
         if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(accountNumber) || string.IsNullOrWhiteSpace(ifsc))
         {
             throw new InvalidOperationException("Bank details are required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(accountNumber))
+        {
+            throw new InvalidOperationException("Bank account number is required.");
+        }
+
+        var ifscValue = ifsc.Trim().ToUpperInvariant();
+        var ifscPattern = @"^[A-Z]{4}0[A-Z0-9]{6}$";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(ifscValue, ifscPattern))
+        {
+            throw new InvalidOperationException("IFSC code format is invalid.");
         }
     }
 

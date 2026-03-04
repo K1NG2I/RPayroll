@@ -39,6 +39,13 @@ public class EmployeeController : Controller
     }
 
     [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        ViewData["EmployeeId"] = id;
+        return View();
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var employees = await _apiClient.GetAsync<List<EmployeeDto>>("/api/employees");

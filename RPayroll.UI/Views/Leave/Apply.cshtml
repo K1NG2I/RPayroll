@@ -21,6 +21,10 @@
                     <input class="form-control" id="endDate" type="date" />
                 </div>
                 <div class="mb-3">
+                    <label class="form-label">Leave Type</label>
+                    <input class="form-control" id="leaveType" />
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Reason</label>
                     <input class="form-control" id="reason" />
                 </div>
@@ -50,6 +54,7 @@ document.getElementById('applyBtn').addEventListener('click', async () => {
         employeeId: $('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0,
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value,
+        leaveType: document.getElementById('leaveType').value,
         reason: document.getElementById('reason').value
     };
 
