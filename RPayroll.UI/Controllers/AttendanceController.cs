@@ -32,6 +32,12 @@ public class AttendanceController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult Today()
+    {
+        return View();
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAttendanceDto dto)
     {

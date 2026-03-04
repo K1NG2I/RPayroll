@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "Leave History";
+}
+
+<h2>Leave History</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover" id="leaveHistoryTable">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Period</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const badge = status => {
+    if (status === 0) return '<span class="badge bg-warning badge-status">Pending</span>';
+    if (status === 30) return '<span class="badge bg-success badge-status">Approved</span>';
+    return '<span class="badge bg-danger badge-status">Rejected</span>';
+};
+
+async function loadHistory() {
+    const response = await fetch('/Leave/GetAll');
+    const data = response.ok ? await response.json() : [];
+    const tbody = document.querySelector('#leaveHistoryTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(leave => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${leave.employeeId}</td>
+            <td>${leave.startDate} - ${leave.endDate}</td>
+            <td>${badge(leave.status)}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+loadHistory();
+</script>
+}

@@ -4,61 +4,69 @@
 
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Employee/List'">
             <div class="card-body">
-                <h6 class="text-muted">Employees</h6>
+                <h6 class="text-muted">Total Employees</h6>
                 <h3 id="employeeCount">-</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Leave/Approval'">
             <div class="card-body">
-                <h6 class="text-muted">Leaves</h6>
-                <h3 id="leaveCount">-</h3>
+                <h6 class="text-muted">Pending Leave Requests</h6>
+                <h3 id="leavePendingCount">-</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Leave/History'">
             <div class="card-body">
-                <h6 class="text-muted">Payrolls</h6>
-                <h3 id="payrollCount">-</h3>
+                <h6 class="text-muted">Approved Leaves</h6>
+                <h3 id="leaveApprovedCount">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Leave/History'">
+            <div class="card-body">
+                <h6 class="text-muted">Rejected Leaves</h6>
+                <h3 id="leaveRejectedCount">-</h3>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
+<div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Payroll/List'">
             <div class="card-body">
-                <h6 class="text-muted">Present Today</h6>
+                <h6 class="text-muted">Payroll Generated</h6>
+                <h3 id="payrollCount">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Attendance/Today'">
+            <div class="card-body">
+                <h6 class="text-muted">Employees Present Today</h6>
                 <h3 id="presentCount">-</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Attendance/Today'">
             <div class="card-body">
-                <h6 class="text-muted">Absent Today</h6>
+                <h6 class="text-muted">Employees Absent Today</h6>
                 <h3 id="absentCount">-</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm dashboard-card" onclick="window.location='/Attendance/List'">
             <div class="card-body">
-                <h6 class="text-muted">Marked Today</h6>
+                <h6 class="text-muted">Attendance Marked Today</h6>
                 <h3 id="markedCount">-</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6 class="text-muted">Late Check-ins</h6>
-                <h3 id="lateCount">-</h3>
             </div>
         </div>
     </div>
@@ -77,14 +85,19 @@ async function loadDashboard() {
     const payrollData = payrolls.ok ? await payrolls.json() : [];
     const stats = attendanceStats.ok ? await attendanceStats.json() : { };
 
+    const pending = leaveData.filter(l => l.status === 0).length;
+    const approved = leaveData.filter(l => l.status === 30).length;
+    const rejected = leaveData.filter(l => l.status === 200).length;
+
     document.getElementById('employeeCount').innerText = employeeData.length;
-    document.getElementById('leaveCount').innerText = leaveData.length;
+    document.getElementById('leavePendingCount').innerText = pending;
+    document.getElementById('leaveApprovedCount').innerText = approved;
+    document.getElementById('leaveRejectedCount').innerText = rejected;
     document.getElementById('payrollCount').innerText = payrollData.length;
 
     document.getElementById('presentCount').innerText = stats.present ?? 0;
     document.getElementById('absentCount').innerText = stats.absent ?? 0;
     document.getElementById('markedCount').innerText = stats.marked ?? 0;
-    document.getElementById('lateCount').innerText = stats.late ?? 0;
 }
 
 loadDashboard();

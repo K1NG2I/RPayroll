@@ -20,8 +20,34 @@ public class AttendanceService : IAttendanceService
     public async Task<AttendanceDto> CreateAttendanceAsync(CreateAttendanceDto dto)
     {
         EnsureAuthenticated();
-        EnsureAdminOrHr();
         ValidateTimes(dto.CheckInTime, dto.CheckOutTime);
+
+        var today = DateTime.UtcNow.Date;
+        var isEmployee = IsEmployee();
+
+        if (isEmployee)
+        {
+            if (!_currentUser.EmployeeId.HasValue)
+            {
+                throw new UnauthorizedAccessException("Employee id not found.");
+            }
+
+            dto.EmployeeId = _currentUser.EmployeeId.Value;
+            if (dto.Date.Date != today)
+            {
+                throw new InvalidOperationException("Employees can only mark attendance for today.");
+            }
+        }
+
+        if (!isEmployee && !IsAdmin() && !IsHr())
+        {
+            throw new UnauthorizedAccessException("Admin/HR required to mark attendance.");
+        }
+
+        if (isEmployee && (dto.Date.Date < today || dto.Date.Date > today))
+        {
+            throw new InvalidOperationException("Invalid attendance date.");
+        }
 
         var existing = await _unitOfWork.Attendances.GetByDateRangeAsync(dto.EmployeeId, dto.Date.Date, dto.Date.Date);
         if (existing.Any())
@@ -48,6 +74,7 @@ public class AttendanceService : IAttendanceService
     public async Task<AttendanceDto?> UpdateAttendanceAsync(UpdateAttendanceDto dto)
     {
         EnsureAuthenticated();
+        EnsureAdminOrHr();
         ValidateTimes(dto.CheckInTime, dto.CheckOutTime);
 
         var attendance = await _unitOfWork.Attendances.GetByIdAsync(dto.AttendanceId);
@@ -56,7 +83,6 @@ public class AttendanceService : IAttendanceService
             return null;
         }
 
-        EnsureCanEditAttendance(attendance.Date);
         attendance.EmployeeId = dto.EmployeeId;
         attendance.Date = dto.Date.Date;
         attendance.CheckInTime = dto.CheckInTime;
@@ -163,19 +189,6 @@ public class AttendanceService : IAttendanceService
         return false;
     }
 
-    private void EnsureCanEditAttendance(DateTime date)
-    {
-        if (IsAdmin() || IsHr())
-        {
-            return;
-        }
-
-        if (date.Date < DateTime.UtcNow.Date)
-        {
-            throw new UnauthorizedAccessException("Cannot edit past attendance.");
-        }
-    }
-
     private static void ValidateTimes(TimeSpan? checkIn, TimeSpan? checkOut)
     {
         if (checkIn.HasValue && checkOut.HasValue && checkOut.Value <= checkIn.Value)
@@ -205,4 +218,6 @@ public class AttendanceService : IAttendanceService
     private bool IsHr() => string.Equals(_currentUser.Role, "HR", StringComparison.OrdinalIgnoreCase);
 
     private bool IsManager() => string.Equals(_currentUser.Role, "Manager", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsEmployee() => string.Equals(_currentUser.Role, "Employee", StringComparison.OrdinalIgnoreCase);
 }

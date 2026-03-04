@@ -3,20 +3,53 @@ html, body {
 }
 
 body {
+  margin: 0;
   background-color: #f5f7fb;
 }
 
 .app-header {
   position: fixed;
-  top: -70px;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1050;
-  transition: top 0.3s ease;
 }
 
-.app-header.header-visible {
-  top: 0;
+.layout {
+  display: flex;
+  padding-top: 56px;
+}
+
+.sidebar {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  overflow: hidden;
+  background: #f8f9fa;
+  border-right: 1px solid #e5e7eb;
+  transition: width 0.2s ease;
+}
+
+.sidebar:hover {
+  width: 220px;
+}
+
+.sidebar .list-group-item {
+  border: 0;
+  white-space: nowrap;
+}
+
+.content {
+  margin-left: 60px;
+  padding: 24px;
+  width: 100%;
+  transition: margin-left 0.2s ease;
+}
+
+.sidebar:hover ~ .content {
+  margin-left: 220px;
 }
 
 .card {
@@ -35,16 +68,15 @@ body {
   font-size: 0.8rem;
 }
 
-.list-group-item {
-  border: 0;
-}
-
-.list-group-item.active,
-.list-group-item:focus,
-.list-group-item:hover {
-  background-color: #e9ecef;
-}
-
 .badge-status {
   font-size: 0.8rem;
+}
+
+.dashboard-card {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
 }

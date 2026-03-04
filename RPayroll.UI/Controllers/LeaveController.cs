@@ -31,6 +31,12 @@ public class LeaveController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult History()
+    {
+        return View();
+    }
+
     [HttpPost]
     public async Task<IActionResult> Apply([FromBody] LeaveRequestDto dto)
     {

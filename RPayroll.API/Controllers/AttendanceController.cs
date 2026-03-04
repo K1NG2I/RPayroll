@@ -18,7 +18,6 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,HR")]
     public async Task<IActionResult> Create([FromBody] CreateAttendanceDto dto)
     {
         var result = await _attendanceService.CreateAttendanceAsync(dto);
@@ -26,7 +25,6 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin,HR")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateAttendanceDto dto)
     {
         dto.AttendanceId = id;

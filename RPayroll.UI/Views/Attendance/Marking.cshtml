@@ -1,65 +1,104 @@
+@inject RPayroll.UI.Services.TokenStore TokenStore
 @{
     ViewData["Title"] = "Attendance Marking";
+    var isEmployee = string.Equals(TokenStore.Role, "Employee", StringComparison.OrdinalIgnoreCase);
 }
 
 <h2>Attendance Marking</h2>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-3 mb-2">
-                <label class="form-label">Employee</label>
-                <select class="form-select" id="employeeSelect"></select>
+@if (isEmployee)
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 id="employeeLabel">Attendance for: </h5>
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" id="attendanceDate" />
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Check In</label>
+                    <input type="time" class="form-control" id="checkIn" />
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Check Out</label>
+                    <input type="time" class="form-control" id="checkOut" />
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusSelect">
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="HalfDay">HalfDay</option>
+                        <option value="Leave">Leave</option>
+                        <option value="Holiday">Holiday</option>
+                    </select>
+                </div>
             </div>
-            <div class="col-md-2 mb-2">
-                <label class="form-label">Date</label>
-                <input type="date" class="form-control" id="attendanceDate" />
-            </div>
-            <div class="col-md-2 mb-2">
-                <label class="form-label">Check In</label>
-                <input type="time" class="form-control" id="checkIn" />
-            </div>
-            <div class="col-md-2 mb-2">
-                <label class="form-label">Check Out</label>
-                <input type="time" class="form-control" id="checkOut" />
-            </div>
-            <div class="col-md-3 mb-2">
-                <label class="form-label">Status</label>
-                <select class="form-select" id="statusSelect">
-                    <option value="Present">Present</option>
-                    <option value="Absent">Absent</option>
-                    <option value="HalfDay">HalfDay</option>
-                    <option value="Leave">Leave</option>
-                    <option value="Holiday">Holiday</option>
-                </select>
-            </div>
+            <button class="btn btn-primary" id="markBtn">Submit Attendance</button>
+            <div class="mt-2" id="markResult"></div>
         </div>
-        <button class="btn btn-primary" id="markBtn">Mark Attendance</button>
-        <div class="mt-2" id="markResult"></div>
     </div>
-</div>
+}
+else
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Employee</label>
+                    <select class="form-select" id="employeeSelect"></select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" id="attendanceDate" />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label">Check In</label>
+                    <input type="time" class="form-control" id="checkIn" />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label">Check Out</label>
+                    <input type="time" class="form-control" id="checkOut" />
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusSelect">
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="HalfDay">HalfDay</option>
+                        <option value="Leave">Leave</option>
+                        <option value="Holiday">Holiday</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="markBtn">Mark Attendance</button>
+            <div class="mt-2" id="markResult"></div>
+        </div>
+    </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="d-flex align-items-center mb-2">
-            <label class="me-2">Date</label>
-            <input type="date" class="form-control" id="filterDate" style="max-width: 200px" />
-            <button class="btn btn-outline-secondary ms-2" id="loadByDate">Load</button>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <label class="me-2">Date</label>
+                <input type="date" class="form-control" id="filterDate" style="max-width: 200px" />
+                <button class="btn btn-outline-secondary ms-2" id="loadByDate">Load</button>
+            </div>
+            <table class="table table-hover" id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
-        <table class="table table-hover" id="attendanceTable">
-            <thead>
-                <tr>
-                    <th>Employee</th>
-                    <th>Date</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
     </div>
-</div>
+}
 
 @section Scripts {
 <script>
@@ -74,40 +113,6 @@ const statusBadge = status => {
     }
 };
 
-$('#employeeSelect').select2({
-    placeholder: 'Search employee',
-    ajax: {
-        url: '/Employee/Search',
-        delay: 250,
-        data: params => ({ query: params.term || '' }),
-        processResults: data => ({
-            results: data.map(item => ({ id: item.id, text: item.fullName }))
-        })
-    }
-});
-
-async function loadByDate() {
-    const date = document.getElementById('filterDate').value;
-    if (!date) return;
-    const response = await fetch(`/Attendance/GetByDate?date=${date}`);
-    const data = response.ok ? await response.json() : [];
-    const tbody = document.querySelector('#attendanceTable tbody');
-    tbody.innerHTML = '';
-    data.forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${item.employeeName}</td>
-            <td>${item.date}</td>
-            <td>${item.checkInTime ?? ''}</td>
-            <td>${item.checkOutTime ?? ''}</td>
-            <td>${statusBadge(item.status)}</td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-document.getElementById('loadByDate').addEventListener('click', loadByDate);
-
 const statusMap = {
     Present: 0,
     Absent: 1,
@@ -116,28 +121,93 @@ const statusMap = {
     Holiday: 4
 };
 
-document.getElementById('markBtn').addEventListener('click', async () => {
-    const payload = {
-        employeeId: $('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0,
-        date: document.getElementById('attendanceDate').value,
-        checkInTime: document.getElementById('checkIn').value || null,
-        checkOutTime: document.getElementById('checkOut').value || null,
-        status: statusMap[document.getElementById('statusSelect').value]
-    };
-
-    const response = await fetch('/Attendance/Create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+@if (!isEmployee)
+{
+    <text>
+    $('#employeeSelect').select2({
+        placeholder: 'Search employee',
+        ajax: {
+            url: '/Employee/Search',
+            delay: 250,
+            data: params => ({ query: params.term || '' }),
+            processResults: data => ({
+                results: data.map(item => ({ id: item.id, text: item.fullName }))
+            })
+        }
     });
 
-    const resultEl = document.getElementById('markResult');
-    if (response.ok) {
-        resultEl.innerHTML = '<div class="alert alert-success">Attendance marked</div>';
-        await loadByDate();
-    } else {
-        resultEl.innerHTML = '<div class="alert alert-danger">Failed to mark attendance</div>';
+    async function loadByDate() {
+        const date = document.getElementById('filterDate').value;
+        if (!date) return;
+        const response = await fetch(`/Attendance/GetByDate?date=${date}`);
+        const data = response.ok ? await response.json() : [];
+        const tbody = document.querySelector('#attendanceTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.employeeName}</td>
+                <td>${item.date}</td>
+                <td>${item.checkInTime ?? ''}</td>
+                <td>${item.checkOutTime ?? ''}</td>
+                <td>${statusBadge(item.status)}</td>
+            `;
+            tbody.appendChild(row);
+        });
     }
-});
+
+    document.getElementById('loadByDate').addEventListener('click', loadByDate);
+    </text>
+}
+
+async function loadEmployeeName() {
+    const profile = await fetch('/Attendance/GetMyProfile');
+    const profileData = profile.ok ? await profile.json() : null;
+    if (!profileData) return;
+    const label = document.getElementById('employeeLabel');
+    if (label) {
+        label.textContent = `Attendance for: ${profileData.firstName} ${profileData.lastName}`;
+    }
+}
+
+const attendanceDate = document.getElementById('attendanceDate');
+if (attendanceDate) {
+    const today = new Date().toISOString().split('T')[0];
+    attendanceDate.value = today;
+    attendanceDate.readOnly = @isEmployee.ToString().ToLower();
+}
+
+@if (isEmployee)
+{
+    <text>
+    loadEmployeeName();
+    </text>
+}
+
+const markBtn = document.getElementById('markBtn');
+if (markBtn) {
+    markBtn.addEventListener('click', async () => {
+        const payload = {
+            employeeId: $('#employeeSelect').val() ? parseInt($('#employeeSelect').val()) : 0,
+            date: document.getElementById('attendanceDate').value,
+            checkInTime: document.getElementById('checkIn').value || null,
+            checkOutTime: document.getElementById('checkOut').value || null,
+            status: statusMap[document.getElementById('statusSelect').value]
+        };
+
+        const response = await fetch('/Attendance/Create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const resultEl = document.getElementById('markResult');
+        if (response.ok) {
+            resultEl.innerHTML = '<div class="alert alert-success">Attendance marked</div>';
+        } else {
+            resultEl.innerHTML = '<div class="alert alert-danger">Failed to mark attendance</div>';
+        }
+    });
+}
 </script>
 }

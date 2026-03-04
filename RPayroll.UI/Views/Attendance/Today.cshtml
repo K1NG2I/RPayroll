@@ -1,0 +1,67 @@
+@inject RPayroll.UI.Services.TokenStore TokenStore
+@{
+    ViewData["Title"] = "Attendance Today";
+    var isEmployee = string.Equals(TokenStore.Role, "Employee", StringComparison.OrdinalIgnoreCase);
+}
+
+<h2>Attendance Today</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover" id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Date</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const statusBadge = status => {
+    switch (status) {
+        case 0: return '<span class="badge bg-success badge-status">Present</span>';
+        case 1: return '<span class="badge bg-danger badge-status">Absent</span>';
+        case 2: return '<span class="badge bg-warning badge-status">HalfDay</span>';
+        case 3: return '<span class="badge bg-primary badge-status">Leave</span>';
+        case 4: return '<span class="badge bg-secondary badge-status">Holiday</span>';
+        default: return '';
+    }
+};
+
+async function loadToday() {
+    const today = new Date().toISOString().split('T')[0];
+    let response;
+
+    if (@isEmployee.ToString().ToLower()) {
+        response = await fetch('/Attendance/GetMy');
+    } else {
+        response = await fetch(`/Attendance/GetByDate?date=${today}`);
+    }
+
+    const data = response.ok ? await response.json() : [];
+    const tbody = document.querySelector('#attendanceTable tbody');
+    tbody.innerHTML = '';
+    data.filter(item => !@isEmployee.ToString().ToLower() || (item.date && item.date.startsWith(today))).forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.employeeName ?? ''}</td>
+            <td>${item.date}</td>
+            <td>${item.checkInTime ?? ''}</td>
+            <td>${item.checkOutTime ?? ''}</td>
+            <td>${statusBadge(item.status)}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+loadToday();
+</script>
+}
