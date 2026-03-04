@@ -12,6 +12,14 @@ public class CreateEmployeeDto
     public decimal BasicSalary { get; set; }
     public DateTime? DateOfJoining { get; set; }
     public string? Address { get; set; }
+    public string? BankName { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? IFSCCode { get; set; }
+
+    public int TotalSickLeaves { get; set; }
+    public int TotalCasualLeaves { get; set; }
+    public int TotalGovernmentLeaves { get; set; }
+    public int TotalUnpaidLeaves { get; set; }
     public int? ManagerId { get; set; }
 
     public bool CreateLogin { get; set; }

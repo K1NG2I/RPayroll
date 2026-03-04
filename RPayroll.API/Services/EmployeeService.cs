@@ -21,6 +21,9 @@ public class EmployeeService : IEmployeeService
     {
         EnsureAuthenticated();
         EnsureCanManageEmployees(dto.ManagerId);
+        ValidateBankDetails(dto.BankName, dto.BankAccountNumber, dto.IFSCCode);
+        ValidateLeaveAllocations(dto.TotalSickLeaves, dto.TotalCasualLeaves, dto.TotalGovernmentLeaves, dto.TotalUnpaidLeaves);
+        ValidateContacts(dto.ContactPersons);
 
         await _unitOfWork.BeginTransactionAsync();
         try
@@ -38,6 +41,17 @@ public class EmployeeService : IEmployeeService
                 ManagerId = dto.ManagerId,
                 DateOfJoining = dto.DateOfJoining,
                 Address = dto.Address,
+                BankName = dto.BankName,
+                BankAccountNumber = dto.BankAccountNumber,
+                IFSCCode = dto.IFSCCode,
+                TotalSickLeaves = dto.TotalSickLeaves,
+                TotalCasualLeaves = dto.TotalCasualLeaves,
+                TotalGovernmentLeaves = dto.TotalGovernmentLeaves,
+                TotalUnpaidLeaves = dto.TotalUnpaidLeaves,
+                UsedSickLeaves = 0,
+                UsedCasualLeaves = 0,
+                UsedGovernmentLeaves = 0,
+                UsedUnpaidLeaves = 0,
                 CreatedDate = DateTime.UtcNow,
                 Status = StatusCode.Accepted
             };
@@ -131,6 +145,8 @@ public class EmployeeService : IEmployeeService
     public async Task<EmployeeDto?> UpdateEmployeeAsync(UpdateEmployeeDto dto)
     {
         EnsureAuthenticated();
+        ValidateBankDetails(dto.BankName, dto.BankAccountNumber, dto.IFSCCode);
+        ValidateLeaveAllocations(dto.TotalSickLeaves, dto.TotalCasualLeaves, dto.TotalGovernmentLeaves, dto.TotalUnpaidLeaves);
 
         var employee = await _unitOfWork.Employees.GetByIdAsync(dto.Id, includeInactive: true);
         if (employee == null)
@@ -151,6 +167,17 @@ public class EmployeeService : IEmployeeService
         employee.ManagerId = dto.ManagerId;
         employee.DateOfJoining = dto.DateOfJoining;
         employee.Address = dto.Address;
+        employee.BankName = dto.BankName;
+        employee.BankAccountNumber = dto.BankAccountNumber;
+        employee.IFSCCode = dto.IFSCCode;
+        employee.TotalSickLeaves = dto.TotalSickLeaves;
+        employee.UsedSickLeaves = dto.UsedSickLeaves;
+        employee.TotalCasualLeaves = dto.TotalCasualLeaves;
+        employee.UsedCasualLeaves = dto.UsedCasualLeaves;
+        employee.TotalGovernmentLeaves = dto.TotalGovernmentLeaves;
+        employee.UsedGovernmentLeaves = dto.UsedGovernmentLeaves;
+        employee.TotalUnpaidLeaves = dto.TotalUnpaidLeaves;
+        employee.UsedUnpaidLeaves = dto.UsedUnpaidLeaves;
         employee.UpdatedDate = DateTime.UtcNow;
         employee.Status = employee.Status == StatusCode.Rejected ? StatusCode.Accepted : employee.Status;
 
@@ -184,6 +211,7 @@ public class EmployeeService : IEmployeeService
     public async Task<EmployeeContactPersonDto> AddContactPersonAsync(int employeeId, EmployeeContactPersonDto dto)
     {
         EnsureAuthenticated();
+        ValidateContact(dto);
         var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId, includeInactive: true);
         if (employee == null)
         {
@@ -219,6 +247,7 @@ public class EmployeeService : IEmployeeService
     public async Task<EmployeeContactPersonDto?> UpdateContactPersonAsync(int employeeId, EmployeeContactPersonDto dto)
     {
         EnsureAuthenticated();
+        ValidateContact(dto);
         var employee = await _unitOfWork.Employees.GetByIdAsync(employeeId, includeInactive: true);
         if (employee == null)
         {
@@ -321,9 +350,13 @@ public class EmployeeService : IEmployeeService
             throw new UnauthorizedAccessException("Cannot edit other employee profile.");
         }
 
+        ValidateBankDetails(dto.BankName, dto.BankAccountNumber, dto.IFSCCode);
         employee.Email = dto.Email;
         employee.Phone = dto.Phone;
         employee.Address = dto.Address;
+        employee.BankName = dto.BankName;
+        employee.BankAccountNumber = dto.BankAccountNumber;
+        employee.IFSCCode = dto.IFSCCode;
         employee.UpdatedDate = DateTime.UtcNow;
 
         await _unitOfWork.Employees.UpdateAsync(employee);
@@ -439,6 +472,17 @@ public class EmployeeService : IEmployeeService
             ManagerId = employee.ManagerId,
             DateOfJoining = employee.DateOfJoining,
             Address = employee.Address,
+            BankName = employee.BankName,
+            BankAccountNumber = employee.BankAccountNumber,
+            IFSCCode = employee.IFSCCode,
+            TotalSickLeaves = employee.TotalSickLeaves,
+            UsedSickLeaves = employee.UsedSickLeaves,
+            TotalCasualLeaves = employee.TotalCasualLeaves,
+            UsedCasualLeaves = employee.UsedCasualLeaves,
+            TotalGovernmentLeaves = employee.TotalGovernmentLeaves,
+            UsedGovernmentLeaves = employee.UsedGovernmentLeaves,
+            TotalUnpaidLeaves = employee.TotalUnpaidLeaves,
+            UsedUnpaidLeaves = employee.UsedUnpaidLeaves,
             ContactPersons = employee.ContactPersons
                 .Where(c => c.Status != StatusCode.Rejected)
                 .Select(c => new EmployeeContactPersonDto
@@ -493,6 +537,48 @@ public class EmployeeService : IEmployeeService
             {
                 contact.IsPrimary = false;
             }
+        }
+    }
+
+    private static void ValidateBankDetails(string? bankName, string? accountNumber, string? ifsc)
+    {
+        if (string.IsNullOrWhiteSpace(bankName) && string.IsNullOrWhiteSpace(accountNumber) && string.IsNullOrWhiteSpace(ifsc))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(accountNumber) || string.IsNullOrWhiteSpace(ifsc))
+        {
+            throw new InvalidOperationException("Bank details are required.");
+        }
+    }
+
+    private static void ValidateLeaveAllocations(int sick, int casual, int government, int unpaid)
+    {
+        if (sick < 0 || casual < 0 || government < 0 || unpaid < 0)
+        {
+            throw new InvalidOperationException("Leave allocations must be positive.");
+        }
+    }
+
+    private static void ValidateContacts(IEnumerable<EmployeeContactPersonDto> contacts)
+    {
+        foreach (var contact in contacts)
+        {
+            ValidateContact(contact);
+        }
+    }
+
+    private static void ValidateContact(EmployeeContactPersonDto contact)
+    {
+        if (string.IsNullOrWhiteSpace(contact.Name))
+        {
+            throw new InvalidOperationException("Contact name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(contact.Phone))
+        {
+            throw new InvalidOperationException("Contact phone is required.");
         }
     }
 }

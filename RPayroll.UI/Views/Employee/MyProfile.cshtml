@@ -6,24 +6,43 @@
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
+        <h5>Basic Information</h5>
         <div class="row">
-            <div class="col-md-6">
-                <div class="mb-2">
-                    <label class="form-label">Email</label>
-                    <input class="form-control" id="profileEmail" />
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Phone</label>
-                    <input class="form-control" id="profilePhone" />
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Address</label>
-                    <input class="form-control" id="profileAddress" />
-                </div>
-                <button class="btn btn-primary" id="saveProfileBtn">Save</button>
-                <div class="mt-2" id="profileResult"></div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Email</label>
+                <input class="form-control" id="profileEmail" />
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Phone</label>
+                <input class="form-control" id="profilePhone" />
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Address</label>
+                <input class="form-control" id="profileAddress" />
             </div>
         </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5>Bank Details</h5>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Bank Name</label>
+                <input class="form-control" id="profileBankName" />
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Account Number</label>
+                <input class="form-control" id="profileBankAccount" />
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">IFSC Code</label>
+                <input class="form-control" id="profileIFSC" />
+            </div>
+        </div>
+        <button class="btn btn-primary" id="saveProfileBtn">Save</button>
+        <div class="mt-2" id="profileResult"></div>
     </div>
 </div>
 
@@ -119,6 +138,9 @@ async function loadProfile() {
     document.getElementById('profileEmail').value = data.email ?? '';
     document.getElementById('profilePhone').value = data.phone ?? '';
     document.getElementById('profileAddress').value = data.address ?? '';
+    document.getElementById('profileBankName').value = data.bankName ?? '';
+    document.getElementById('profileBankAccount').value = data.bankAccountNumber ?? '';
+    document.getElementById('profileIFSC').value = data.ifscCode ?? '';
 
     renderContacts(data.contactPersons || []);
 }
@@ -221,7 +243,10 @@ document.getElementById('saveProfileBtn').addEventListener('click', async () => 
     const payload = {
         email: document.getElementById('profileEmail').value,
         phone: document.getElementById('profilePhone').value,
-        address: document.getElementById('profileAddress').value
+        address: document.getElementById('profileAddress').value,
+        bankName: document.getElementById('profileBankName').value,
+        bankAccountNumber: document.getElementById('profileBankAccount').value,
+        ifscCode: document.getElementById('profileIFSC').value
     };
 
     const response = await fetch('/Employee/UpdateMyProfile', {
