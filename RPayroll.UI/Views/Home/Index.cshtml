@@ -2,7 +2,7 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="row g-4">
+<div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="card shadow-sm">
             <div class="card-body">
@@ -29,20 +29,62 @@
     </div>
 </div>
 
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Present Today</h6>
+                <h3 id="presentCount">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Absent Today</h6>
+                <h3 id="absentCount">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Marked Today</h6>
+                <h3 id="markedCount">-</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Late Check-ins</h6>
+                <h3 id="lateCount">-</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
 async function loadDashboard() {
     const employees = await fetch('/Employee/GetAll');
     const leaves = await fetch('/Leave/GetAll');
     const payrolls = await fetch('/Payroll/GetAll');
+    const attendanceStats = await fetch('/Home/GetAttendanceStats');
 
     const employeeData = employees.ok ? await employees.json() : [];
     const leaveData = leaves.ok ? await leaves.json() : [];
     const payrollData = payrolls.ok ? await payrolls.json() : [];
+    const stats = attendanceStats.ok ? await attendanceStats.json() : { };
 
     document.getElementById('employeeCount').innerText = employeeData.length;
     document.getElementById('leaveCount').innerText = leaveData.length;
     document.getElementById('payrollCount').innerText = payrollData.length;
+
+    document.getElementById('presentCount').innerText = stats.present ?? 0;
+    document.getElementById('absentCount').innerText = stats.absent ?? 0;
+    document.getElementById('markedCount').innerText = stats.marked ?? 0;
+    document.getElementById('lateCount').innerText = stats.late ?? 0;
 }
 
 loadDashboard();

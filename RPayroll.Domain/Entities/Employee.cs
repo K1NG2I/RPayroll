@@ -25,4 +25,5 @@ public class Employee : BaseEntity
     public List<EmployeeContactPerson> ContactPersons { get; set; } = new();
     public List<LeaveRequest> LeaveRequests { get; set; } = new();
     public List<Payroll> Payrolls { get; set; } = new();
+    public List<Attendance> Attendances { get; set; } = new();
 }

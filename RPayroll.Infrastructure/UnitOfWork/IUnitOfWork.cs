@@ -8,6 +8,7 @@ public interface IUnitOfWork
     IUserRepository Users { get; }
     IRoleRepository Roles { get; }
     ILeaveRepository Leaves { get; }
+    IAttendanceRepository Attendances { get; }
     IPayrollRepository Payrolls { get; }
 
     Task SaveChangesAsync();

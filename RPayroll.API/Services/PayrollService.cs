@@ -34,34 +34,45 @@ public class PayrollService : IPayrollService
         var monthStart = new DateTime(periodStart.Year, periodStart.Month, 1);
         var totalDaysInMonth = DateTime.DaysInMonth(periodStart.Year, periodStart.Month);
         var monthEnd = monthStart.AddDays(totalDaysInMonth - 1);
+        var effectiveEnd = periodEnd.Date > monthEnd ? monthEnd : periodEnd.Date;
 
         var joiningDate = employee.DateOfJoining?.Date;
-        if (joiningDate.HasValue && joiningDate.Value > monthEnd)
+        if (joiningDate.HasValue && joiningDate.Value > effectiveEnd)
         {
             return await CreateZeroPayrollAsync(employeeId, periodStart, periodEnd);
         }
 
-        var workingDays = totalDaysInMonth;
-        if (joiningDate.HasValue && joiningDate.Value > monthStart)
-        {
-            var daysBeforeJoining = (joiningDate.Value - monthStart).Days;
-            workingDays -= daysBeforeJoining;
-        }
+        var rangeStart = joiningDate.HasValue && joiningDate.Value > monthStart ? joiningDate.Value : monthStart;
+
+        var attendanceRecords = await _unitOfWork.Attendances.GetByDateRangeAsync(employeeId, rangeStart, effectiveEnd);
+        var attendanceByDate = attendanceRecords.ToDictionary(a => a.Date.Date, a => a);
 
         var approvedLeaves = await _unitOfWork.Leaves.GetByEmployeeAsync(employeeId, includeInactive: false);
-        var approvedLeaveDays = approvedLeaves
-            .Where(l => l.Status == StatusCode.Accepted)
-            .Sum(l => CalculateOverlapDays(l.StartDate.Date, l.EndDate.Date, monthStart, monthEnd));
+        var approvedLeaveDates = ExpandApprovedLeaveDates(approvedLeaves, rangeStart, effectiveEnd);
 
-        workingDays -= approvedLeaveDays;
-        if (workingDays < 0)
+        decimal payableDays = 0;
+        for (var date = rangeStart; date <= effectiveEnd; date = date.AddDays(1))
         {
-            workingDays = 0;
+            if (attendanceByDate.TryGetValue(date, out var attendance))
+            {
+                payableDays += attendance.Status switch
+                {
+                    AttendanceStatus.Present => 1m,
+                    AttendanceStatus.HalfDay => 0.5m,
+                    AttendanceStatus.Holiday => 1m,
+                    AttendanceStatus.Leave => 1m,
+                    _ => 0m
+                };
+            }
+            else if (approvedLeaveDates.Contains(date))
+            {
+                payableDays += 1m;
+            }
         }
 
         var grossSalary = employee.BasicSalary;
         var dailyRate = totalDaysInMonth == 0 ? 0 : grossSalary / totalDaysInMonth;
-        var netSalary = dailyRate * workingDays;
+        var netSalary = dailyRate * payableDays;
 
         var payroll = new Payroll
         {
@@ -167,16 +178,20 @@ public class PayrollService : IPayrollService
         return false;
     }
 
-    private static int CalculateOverlapDays(DateTime start, DateTime end, DateTime rangeStart, DateTime rangeEnd)
+    private static HashSet<DateTime> ExpandApprovedLeaveDates(IEnumerable<LeaveRequest> leaves, DateTime rangeStart, DateTime rangeEnd)
     {
-        if (end < rangeStart || start > rangeEnd)
+        var dates = new HashSet<DateTime>();
+        foreach (var leave in leaves.Where(l => l.Status == StatusCode.Accepted))
         {
-            return 0;
+            var start = leave.StartDate.Date < rangeStart ? rangeStart : leave.StartDate.Date;
+            var end = leave.EndDate.Date > rangeEnd ? rangeEnd : leave.EndDate.Date;
+            for (var date = start; date <= end; date = date.AddDays(1))
+            {
+                dates.Add(date);
+            }
         }
 
-        var effectiveStart = start < rangeStart ? rangeStart : start;
-        var effectiveEnd = end > rangeEnd ? rangeEnd : end;
-        return (effectiveEnd - effectiveStart).Days + 1;
+        return dates;
     }
 
     private async Task<PayrollDto> CreateZeroPayrollAsync(int employeeId, DateTime periodStart, DateTime periodEnd)

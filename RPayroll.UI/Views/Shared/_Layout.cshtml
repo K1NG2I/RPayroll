@@ -49,12 +49,20 @@
                     }
 
                     <a class="list-group-item list-group-item-action" asp-controller="Leave" asp-action="Apply">Apply Leave</a>
+                    <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="My">My Attendance</a>
 
                     if (string.Equals(TokenStore.Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(TokenStore.Role, "HR", StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(TokenStore.Role, "Manager", StringComparison.OrdinalIgnoreCase))
                     {
                         <a class="list-group-item list-group-item-action" asp-controller="Leave" asp-action="Approval">Leave Approval</a>
+                    }
+
+                    if (string.Equals(TokenStore.Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(TokenStore.Role, "HR", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="Marking">Attendance Marking</a>
+                        <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="List">Attendance List</a>
                     }
 
                     <a class="list-group-item list-group-item-action" asp-controller="Payroll" asp-action="Generate">Generate Payroll</a>

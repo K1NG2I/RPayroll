@@ -10,6 +10,7 @@ public static class InMemoryDataStore
     public static List<LeaveRequest> LeaveRequests { get; } = new();
     public static List<Payroll> Payrolls { get; } = new();
     public static List<Role> Roles { get; } = new();
+    public static List<Attendance> Attendances { get; } = new();
 
     private static int _employeeId = 1;
     private static int _userId = 1;
@@ -17,6 +18,7 @@ public static class InMemoryDataStore
     private static int _payrollId = 1;
     private static int _roleId = 1;
     private static int _contactId = 1;
+    private static int _attendanceId = 1;
 
     static InMemoryDataStore()
     {
@@ -191,6 +193,42 @@ public static class InMemoryDataStore
         };
 
         LeaveRequests.AddRange(new[] { pendingLeave, approvedLeave });
+
+        var today = DateTime.UtcNow.Date;
+        Attendances.AddRange(new[]
+        {
+            new Attendance
+            {
+                AttendanceId = NextAttendanceId(),
+                EmployeeId = managerEmployee.Id,
+                Employee = managerEmployee,
+                Date = today,
+                CheckInTime = new TimeSpan(9, 0, 0),
+                CheckOutTime = new TimeSpan(18, 0, 0),
+                Status = AttendanceStatus.Present,
+                CreatedDate = DateTime.UtcNow
+            },
+            new Attendance
+            {
+                AttendanceId = NextAttendanceId(),
+                EmployeeId = employeeOne.Id,
+                Employee = employeeOne,
+                Date = today,
+                CheckInTime = new TimeSpan(9, 15, 0),
+                CheckOutTime = new TimeSpan(18, 0, 0),
+                Status = AttendanceStatus.Present,
+                CreatedDate = DateTime.UtcNow
+            },
+            new Attendance
+            {
+                AttendanceId = NextAttendanceId(),
+                EmployeeId = employeeTwo.Id,
+                Employee = employeeTwo,
+                Date = today,
+                Status = AttendanceStatus.Absent,
+                CreatedDate = DateTime.UtcNow
+            }
+        });
     }
 
     public static int NextEmployeeId() => _employeeId++;
@@ -199,4 +237,5 @@ public static class InMemoryDataStore
     public static int NextPayrollId() => _payrollId++;
     public static int NextRoleId() => _roleId++;
     public static int NextContactId() => _contactId++;
+    public static int NextAttendanceId() => _attendanceId++;
 }

@@ -9,12 +9,14 @@ public class UnitOfWork : IUnitOfWork
         IUserRepository users,
         IRoleRepository roles,
         ILeaveRepository leaves,
+        IAttendanceRepository attendances,
         IPayrollRepository payrolls)
     {
         Employees = employees;
         Users = users;
         Roles = roles;
         Leaves = leaves;
+        Attendances = attendances;
         Payrolls = payrolls;
     }
 
@@ -22,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     public IUserRepository Users { get; }
     public IRoleRepository Roles { get; }
     public ILeaveRepository Leaves { get; }
+    public IAttendanceRepository Attendances { get; }
     public IPayrollRepository Payrolls { get; }
 
     public Task SaveChangesAsync()
