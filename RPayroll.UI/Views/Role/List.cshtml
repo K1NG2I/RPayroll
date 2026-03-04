@@ -7,12 +7,22 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <h5>Create Role</h5>
-        <div class="row">
-            <div class="col-md-6 mb-2">
-                <input class="form-control" id="roleName" placeholder="Role name" />
-            </div>
-            <div class="col-md-6 mb-2">
-                <input class="form-control" id="roleLevel" type="number" placeholder="Hierarchy level" />
+        <div class="form-wrapper">
+            <div class="form-layout">
+                <div class="form-info">
+                    <div class="info-item">Provide a unique role name.</div>
+                    <div class="info-item">Set the hierarchy level (lower is higher authority).</div>
+                </div>
+                <div class="form-fields">
+                    <div class="form-group">
+                        <label class="form-label">Role Name</label>
+                        <input class="form-control" id="roleName" placeholder="Role name" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hierarchy Level</label>
+                        <input class="form-control" id="roleLevel" type="number" placeholder="Hierarchy level" />
+                    </div>
+                </div>
             </div>
         </div>
         <button class="btn btn-primary" id="createRoleBtn">Create</button>

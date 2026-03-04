@@ -8,40 +8,49 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                @if (isEmployee)
-                {
-                    <div class="mb-3">
-                        <label class="form-label">Employee</label>
-                        <div class="form-control-plaintext" id="employeeLabel">Employee:</div>
+        <div class="form-wrapper">
+            <div class="form-layout">
+                <div class="form-info">
+                    <div class="info-item">Select the employee applying for leave.</div>
+                    <div class="info-item">Provide the leave start date.</div>
+                    <div class="info-item">Provide the leave end date.</div>
+                    <div class="info-item">Specify the leave type.</div>
+                    <div class="info-item">Add a brief reason for the leave.</div>
+                </div>
+                <div class="form-fields">
+                    @if (isEmployee)
+                    {
+                        <div class="form-group">
+                            <label class="form-label">Employee</label>
+                            <div class="form-control-plaintext" id="employeeLabel">Employee:</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group">
+                            <label class="form-label">Employee</label>
+                            <select class="form-select" id="employeeSelect"></select>
+                        </div>
+                    }
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input class="form-control" id="startDate" type="date" />
                     </div>
-                }
-                else
-                {
-                    <div class="mb-3">
-                        <label class="form-label">Employee</label>
-                        <select class="form-select" id="employeeSelect"></select>
+                    <div class="form-group">
+                        <label class="form-label">End Date</label>
+                        <input class="form-control" id="endDate" type="date" />
                     </div>
-                }
-                <div class="mb-3">
-                    <label class="form-label">Start Date</label>
-                    <input class="form-control" id="startDate" type="date" />
+                    <div class="form-group">
+                        <label class="form-label">Leave Type</label>
+                        <input class="form-control" id="leaveType" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reason</label>
+                        <input class="form-control" id="reason" />
+                    </div>
+                    <button class="btn btn-primary" id="applyBtn">Apply</button>
+                    <div class="mt-3" id="applyResult"></div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">End Date</label>
-                    <input class="form-control" id="endDate" type="date" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Leave Type</label>
-                    <input class="form-control" id="leaveType" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Reason</label>
-                    <input class="form-control" id="reason" />
-                </div>
-                <button class="btn btn-primary" id="applyBtn">Apply</button>
-                <div class="mt-3" id="applyResult"></div>
             </div>
         </div>
     </div>

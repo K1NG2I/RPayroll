@@ -12,158 +12,171 @@
 
 <input type="hidden" id="employeeId" value="@employeeId" />
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h5>Basic Information</h5>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label">First Name</label>
-                <input class="form-control" id="firstName" />
+<div class="form-wrapper">
+    <div class="form-layout">
+        <div class="form-info">
+            <div class="info-item">Update personal and job details.</div>
+            <div class="info-item">Manage login details if applicable.</div>
+            <div class="info-item">Adjust bank details for salary.</div>
+            <div class="info-item">Update leave allocations.</div>
+            <div class="info-item">Maintain contact persons.</div>
+        </div>
+        <div class="form-fields">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5>Basic Information</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input class="form-control" id="firstName" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input class="form-control" id="lastName" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Email</label>
+                            <input class="form-control" id="email" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Phone</label>
+                            <input class="form-control" id="phone" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Address</label>
+                            <input class="form-control" id="address" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Date Of Joining</label>
+                            <input class="form-control" id="dateOfJoining" type="date" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Department</label>
+                            <input class="form-control" id="department" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Position</label>
+                            <input class="form-control" id="position" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Basic Salary</label>
+                            <input class="form-control" id="basicSalary" type="number" step="0.01" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Manager</label>
+                            <select class="form-select" id="managerSelect"></select>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Last Name</label>
-                <input class="form-control" id="lastName" />
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5>Create Login</h5>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="createLogin" />
+                        <label class="form-check-label">Create Login</label>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Username</label>
+                            <input class="form-control login-field" id="username" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Password</label>
+                            <input class="form-control login-field" id="password" type="password" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select login-field" id="roleSelect"></select>
+                        </div>
+                    </div>
+                    @if (!canManageLogin)
+                    {
+                        <div class="text-muted">Only Admin or HR can create or update login details.</div>
+                    }
+                </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Email</label>
-                <input class="form-control" id="email" />
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5>Bank Details</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Bank Name</label>
+                            <input class="form-control" id="bankName" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Account Number</label>
+                            <input class="form-control" id="bankAccountNumber" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">IFSC Code</label>
+                            <input class="form-control" id="ifscCode" />
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Phone</label>
-                <input class="form-control" id="phone" />
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5>Leave Allocation</h5>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Total Allowed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sick Leave</td>
+                                <td><input class="form-control" type="number" id="totalSickLeaves" min="0" value="0" /></td>
+                            </tr>
+                            <tr>
+                                <td>Casual Leave</td>
+                                <td><input class="form-control" type="number" id="totalCasualLeaves" min="0" value="0" /></td>
+                            </tr>
+                            <tr>
+                                <td>Government Leave</td>
+                                <td><input class="form-control" type="number" id="totalGovernmentLeaves" min="0" value="0" /></td>
+                            </tr>
+                            <tr>
+                                <td>Unpaid Leave</td>
+                                <td><input class="form-control" type="number" id="totalUnpaidLeaves" min="0" value="0" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Address</label>
-                <input class="form-control" id="address" />
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">Contact Persons</h5>
+                        <button class="btn btn-sm btn-primary" id="addContactBtn"><i class="fa fa-plus"></i> Add</button>
+                    </div>
+                    <table class="table table-hover" id="contactTable">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Relationship</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Primary</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Date Of Joining</label>
-                <input class="form-control" id="dateOfJoining" type="date" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Department</label>
-                <input class="form-control" id="department" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Position</label>
-                <input class="form-control" id="position" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Basic Salary</label>
-                <input class="form-control" id="basicSalary" type="number" step="0.01" />
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Manager</label>
-                <select class="form-select" id="managerSelect"></select>
-            </div>
+
+            <button class="btn btn-primary" id="saveBtn">Save Changes</button>
+            <div class="mt-3" id="saveResult"></div>
         </div>
     </div>
 </div>
-
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h5>Create Login</h5>
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="createLogin" />
-            <label class="form-check-label">Create Login</label>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Username</label>
-                <input class="form-control login-field" id="username" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Password</label>
-                <input class="form-control login-field" id="password" type="password" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Role</label>
-                <select class="form-select login-field" id="roleSelect"></select>
-            </div>
-        </div>
-        @if (!canManageLogin)
-        {
-            <div class="text-muted">Only Admin or HR can create or update login details.</div>
-        }
-    </div>
-</div>
-
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h5>Bank Details</h5>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Bank Name</label>
-                <input class="form-control" id="bankName" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Account Number</label>
-                <input class="form-control" id="bankAccountNumber" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">IFSC Code</label>
-                <input class="form-control" id="ifscCode" />
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h5>Leave Allocation</h5>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Leave Type</th>
-                    <th>Total Allowed</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Sick Leave</td>
-                    <td><input class="form-control" type="number" id="totalSickLeaves" min="0" value="0" /></td>
-                </tr>
-                <tr>
-                    <td>Casual Leave</td>
-                    <td><input class="form-control" type="number" id="totalCasualLeaves" min="0" value="0" /></td>
-                </tr>
-                <tr>
-                    <td>Government Leave</td>
-                    <td><input class="form-control" type="number" id="totalGovernmentLeaves" min="0" value="0" /></td>
-                </tr>
-                <tr>
-                    <td>Unpaid Leave</td>
-                    <td><input class="form-control" type="number" id="totalUnpaidLeaves" min="0" value="0" /></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="mb-0">Contact Persons</h5>
-            <button class="btn btn-sm btn-primary" id="addContactBtn"><i class="fa fa-plus"></i> Add</button>
-        </div>
-        <table class="table table-hover" id="contactTable">
-            <thead>
-                <tr>
-                    <th>Full Name</th>
-                    <th>Relationship</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                    <th>Primary</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-</div>
-
-<button class="btn btn-primary" id="saveBtn">Save Changes</button>
-<div class="mt-3" id="saveResult"></div>
 
 <div class="modal fade" id="contactModal" tabindex="-1">
     <div class="modal-dialog">

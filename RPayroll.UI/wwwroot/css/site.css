@@ -2,6 +2,43 @@ html, body {
   height: 100%;
 }
 
+.form-wrapper {
+    width: 100%;
+}
+
+.form-layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+.form-info {
+    width: 30%;
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.form-info .info-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-fields {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+}
+
 body {
   margin: 0;
   background-color: #f5f7fb;

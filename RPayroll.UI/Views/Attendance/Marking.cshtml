@@ -10,30 +10,43 @@
 {
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <h5 id="employeeLabel">Attendance for: </h5>
-            <div class="row">
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Date</label>
-                    <input type="date" class="form-control" id="attendanceDate" />
-                </div>
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Check In</label>
-                    <input type="time" class="form-control" id="checkIn" />
-                </div>
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Check Out</label>
-                    <input type="time" class="form-control" id="checkOut" />
-                </div>
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" id="statusSelect">
-                        <option value="Present">Present</option>
-                        <option value="HalfDay">HalfDay</option>
-                    </select>
+            <div class="form-wrapper">
+                <div class="form-layout">
+                    <div class="form-info">
+                        <div class="info-item">Attendance is only allowed for today.</div>
+                        <div class="info-item">Record your check-in time.</div>
+                        <div class="info-item">Record your check-out time.</div>
+                        <div class="info-item">Select Present or HalfDay.</div>
+                    </div>
+                    <div class="form-fields">
+                        <div class="form-group">
+                            <label class="form-label">Employee</label>
+                            <div class="form-control-plaintext" id="employeeLabel">Attendance for: </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="attendanceDate" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Check In</label>
+                            <input type="time" class="form-control" id="checkIn" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Check Out</label>
+                            <input type="time" class="form-control" id="checkOut" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="statusSelect">
+                                <option value="Present">Present</option>
+                                <option value="HalfDay">HalfDay</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="markBtn">Submit Attendance</button>
+                        <div class="mt-2" id="markResult"></div>
+                    </div>
                 </div>
             </div>
-            <button class="btn btn-primary" id="markBtn">Submit Attendance</button>
-            <div class="mt-2" id="markResult"></div>
         </div>
     </div>
 }
@@ -41,36 +54,47 @@ else
 {
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Employee</label>
-                    <select class="form-select" id="employeeSelect"></select>
-                </div>
-                <div class="col-md-2 mb-2">
-                    <label class="form-label">Date</label>
-                    <input type="date" class="form-control" id="attendanceDate" />
-                </div>
-                <div class="col-md-2 mb-2">
-                    <label class="form-label">Check In</label>
-                    <input type="time" class="form-control" id="checkIn" />
-                </div>
-                <div class="col-md-2 mb-2">
-                    <label class="form-label">Check Out</label>
-                    <input type="time" class="form-control" id="checkOut" />
-                </div>
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" id="statusSelect">
-                        <option value="Present">Present</option>
-                        <option value="Absent">Absent</option>
-                        <option value="HalfDay">HalfDay</option>
-                        <option value="Leave">Leave</option>
-                        <option value="Holiday">Holiday</option>
-                    </select>
+            <div class="form-wrapper">
+                <div class="form-layout">
+                    <div class="form-info">
+                        <div class="info-item">Select the employee to mark attendance.</div>
+                        <div class="info-item">Choose the attendance date.</div>
+                        <div class="info-item">Record check-in time.</div>
+                        <div class="info-item">Record check-out time.</div>
+                        <div class="info-item">Select the attendance status.</div>
+                    </div>
+                    <div class="form-fields">
+                        <div class="form-group">
+                            <label class="form-label">Employee</label>
+                            <select class="form-select" id="employeeSelect"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="attendanceDate" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Check In</label>
+                            <input type="time" class="form-control" id="checkIn" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Check Out</label>
+                            <input type="time" class="form-control" id="checkOut" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="statusSelect">
+                                <option value="Present">Present</option>
+                                <option value="Absent">Absent</option>
+                                <option value="HalfDay">HalfDay</option>
+                                <option value="Leave">Leave</option>
+                                <option value="Holiday">Holiday</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="markBtn">Mark Attendance</button>
+                        <div class="mt-2" id="markResult"></div>
+                    </div>
                 </div>
             </div>
-            <button class="btn btn-primary" id="markBtn">Mark Attendance</button>
-            <div class="mt-2" id="markResult"></div>
         </div>
     </div>
 
