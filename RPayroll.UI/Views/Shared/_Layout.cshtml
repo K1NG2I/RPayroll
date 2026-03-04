@@ -38,6 +38,7 @@
                 @if (!string.IsNullOrWhiteSpace(TokenStore.Role))
                 {
                     <a class="list-group-item list-group-item-action" asp-controller="Employee" asp-action="MyProfile">My Profile</a>
+                    <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="Marking">Mark Attendance</a>
                     <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="My">Attendance</a>
                     <a class="list-group-item list-group-item-action" asp-controller="Leave" asp-action="Apply">Apply Leave</a>
                     <a class="list-group-item list-group-item-action" asp-controller="Leave" asp-action="MyLeaves">Leave</a>

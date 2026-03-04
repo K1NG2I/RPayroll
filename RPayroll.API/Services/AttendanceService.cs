@@ -22,7 +22,7 @@ public class AttendanceService : IAttendanceService
         EnsureAuthenticated();
         ValidateTimes(dto.CheckInTime, dto.CheckOutTime);
 
-        var today = DateTime.UtcNow.Date;
+        var today = DateTime.Today;
         var isEmployee = IsEmployee();
 
         if (isEmployee)
