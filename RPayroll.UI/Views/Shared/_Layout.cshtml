@@ -1,4 +1,33 @@
 @inject RPayroll.UI.Services.TokenStore TokenStore
+@inject RPayroll.UI.Services.MenuService MenuService
+@using RPayroll.UI.Models
+@{
+    var menuItems = MenuService.GetMenuItems(TokenStore.Role);
+    var topMenus = menuItems.Where(item => item.ParentId == null).ToList();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var activeTop = topMenus.FirstOrDefault(menu =>
+        string.Equals(menu.Controller, currentController, StringComparison.OrdinalIgnoreCase) ||
+        menu.Children.Any(child => string.Equals(child.Controller, currentController, StringComparison.OrdinalIgnoreCase)))
+        ?? topMenus.FirstOrDefault();
+    var sidebarItems = activeTop?.Children ?? new List<MenuItem>();
+
+    string MenuUrl(MenuItem item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.Controller) && !string.IsNullOrWhiteSpace(item.Action))
+        {
+            return Url.Action(item.Action, item.Controller) ?? "#";
+        }
+
+        var firstChild = item.Children.FirstOrDefault();
+        if (firstChild != null)
+        {
+            return Url.Action(firstChild.Action, firstChild.Controller) ?? "#";
+        }
+
+        return "#";
+    }
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +45,18 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-controller="Home" asp-action="Index">RPayroll</a>
+                @if (!string.IsNullOrWhiteSpace(TokenStore.Role))
+                {
+                    <ul class="navbar-nav me-auto">
+                        @foreach (var menu in topMenus)
+                        {
+                            var isActive = activeTop != null && activeTop.Id == menu.Id;
+                            <li class="nav-item">
+                                <a class="nav-link @(isActive ? "active" : "")" href="@MenuUrl(menu)">@menu.Title</a>
+                            </li>
+                        }
+                    </ul>
+                }
                 <div class="d-flex align-items-center text-white">
                     <span class="me-3">@TokenStore.Username</span>
                     <span class="badge bg-secondary me-3">@TokenStore.Role</span>
@@ -33,33 +74,13 @@
     <div class="layout">
         <aside class="sidebar">
             <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action" asp-controller="Home" asp-action="Index">Dashboard</a>
-
                 @if (!string.IsNullOrWhiteSpace(TokenStore.Role))
                 {
-                    <a class="list-group-item list-group-item-action" asp-controller="Employee" asp-action="MyProfile">My Profile</a>
-                    <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="Marking">Mark Attendance</a>
-                    <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="My">Attendance</a>
-                    <a class="list-group-item list-group-item-action" asp-controller="Leave" asp-action="Apply">Apply Leave</a>
-                    <a class="list-group-item list-group-item-action" asp-controller="Leave" asp-action="MyLeaves">Leave</a>
-                    <a class="list-group-item list-group-item-action" asp-controller="Payroll" asp-action="List">Payroll</a>
-
-                    if (string.Equals(TokenStore.Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(TokenStore.Role, "HR", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(TokenStore.Role, "Manager", StringComparison.OrdinalIgnoreCase))
+                    @foreach (var item in sidebarItems)
                     {
-                        <a class="list-group-item list-group-item-action" asp-controller="Employee" asp-action="List">Employees</a>
-                        <a class="list-group-item list-group-item-action" asp-controller="Employee" asp-action="Create">Create Employee</a>
-                    }
-
-                    if (string.Equals(TokenStore.Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(TokenStore.Role, "HR", StringComparison.OrdinalIgnoreCase))
-                    {
-                        <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="Marking">Attendance Marking</a>
-                        <a class="list-group-item list-group-item-action" asp-controller="Attendance" asp-action="List">Attendance List</a>
-                        <a class="list-group-item list-group-item-action" asp-controller="Leave" asp-action="Approval">Leave Approval</a>
-                        <a class="list-group-item list-group-item-action" asp-controller="Payroll" asp-action="Generate">Generate Payroll</a>
-                        <a class="list-group-item list-group-item-action" asp-controller="Role" asp-action="List">Role Management</a>
+                        var isActive = string.Equals(item.Controller, currentController, StringComparison.OrdinalIgnoreCase)
+                                       && string.Equals(item.Action, currentAction, StringComparison.OrdinalIgnoreCase);
+                        <a class="list-group-item list-group-item-action @(isActive ? "active" : "")" href="@MenuUrl(item)">@item.Title</a>
                     }
                 }
                 else

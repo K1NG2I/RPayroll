@@ -13,6 +13,7 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddScoped<TokenStore>();
+builder.Services.AddSingleton<MenuService>();
 
 builder.Services.AddHttpClient<ApiClient>(client =>
 {
